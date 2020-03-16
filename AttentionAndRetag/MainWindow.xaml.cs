@@ -135,7 +135,7 @@ namespace AttentionAndRetag
             {
                 Next();
             }
-            
+
         }
 
         private void Previous(bool v)
@@ -146,10 +146,7 @@ namespace AttentionAndRetag
             {
                 attentionHandler.Previous();
             }
-            this.Title = lbl.name;
-            lastUpdate = DateTime.Now;
-            pictureBox.Source = attentionHandler.Image.ToWPFBitmap();
-            iOri.Source = pictureBox.Source;
+            LoadImageInformation(attentionHandler.Filename);
             if (v)
             {
                 var _name_ = attentionHandler.Filename;
@@ -169,15 +166,13 @@ namespace AttentionAndRetag
         private void Next()
         {
             attentionHandler.Next();
+
             var lbl = manager.GetLabel(attentionHandler.Filename);
             while (lbl == null)
             {
                 attentionHandler.Next();
             }
-            this.Title = lbl.name;
-            lastUpdate = DateTime.Now;
-            pictureBox.Source = attentionHandler.Image.ToWPFBitmap();
-            iOri.Source = pictureBox.Source;
+            LoadImageInformation(attentionHandler.Filename);
         }
 
         private async void SaveClick(object sender, RoutedEventArgs e)
@@ -206,8 +201,6 @@ namespace AttentionAndRetag
                     Directory.CreateDirectory("./data/imp/images");
                     Directory.CreateDirectory("./data/imp/labels");
 
-                    var newLabel = await retag.ImproveLabel(iActivated, attentionHandler.Image, grayscale, label);
-
                     PresentResult pr = new PresentResult();
 
                     pr.iActivated.Source = applied.ToWPFBitmap();
@@ -217,6 +210,8 @@ namespace AttentionAndRetag
                     pr.Closed += Pr_Closed;
                     if ((ret = pr.ShowDialog() == true))
                     {
+                        var newLabel = await retag.ImproveLabel(iActivated, attentionHandler.Image, grayscale, label);
+
                         SaveFile_("./data/ori/images/" + _name_ + ".jpg", attentionHandler.Image);
                         SaveLabel("./data/ori/labels/" + _name_ + ".txt", label, attentionHandler.Image.Width, attentionHandler.Image.Height);
                         SaveFile_("./data/imp/images/" + _name_ + ".jpg", applied);
@@ -231,7 +226,7 @@ namespace AttentionAndRetag
             }
             return ret;
         }
-         private void SetFocus()
+        private void SetFocus()
         {
             this.Focusable = true;
             this.Activate();
@@ -281,19 +276,35 @@ namespace AttentionAndRetag
             {
                 attentionHandler.OpenImage(ofd.FileName, true);
                 manager.SaveConfig();
-                var lbl = manager.GetLabel(attentionHandler.Filename);
-                if (lbl == null)
-                {
-                    MessageBox.Show("Could not tag an image without label, choose another");
-                }
-                else
-                {
-                    this.Title = lbl.name;
-                    lastUpdate = DateTime.Now;
-                    pictureBox.Source = attentionHandler.Image.ToWPFBitmap();
-                    iOri.Source = pictureBox.Source;
-                }
+                LoadImageInformation(ofd.FileName);
             }
+        }
+
+        private void LoadImageInformation(string FileName)
+        {
+            var _name_ = attentionHandler.Filename;
+            var lbl = manager.GetLabel(attentionHandler.Filename);
+            if (lbl == null)
+            {
+                MessageBox.Show("Could not tag an image without label, choose another");
+            }
+            else
+            {
+                this.Title = lbl.name;
+                lastUpdate = DateTime.Now;
+                pictureBox.Source = attentionHandler.Image.ToWPFBitmap();
+                iOri.Source = pictureBox.Source;
+            }
+            var img_path = "./data/imp/images/" + _name_ + ".jpg";
+            var exists = (System.IO.File.Exists(img_path));
+            if (exists)
+            {
+                BitmapFactory bitmapFactory = new BitmapFactory();
+                using (var fs = System.IO.File.OpenRead(img_path))
+                    iActivation.Source = bitmapFactory.Decode(fs).ToWPFBitmap();
+            }
+            else
+                iActivation.Source = null;
         }
 
         private void SaveFile_(string _name_, Image<Pixel> img)

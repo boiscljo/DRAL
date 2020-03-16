@@ -15,6 +15,7 @@ namespace AttentionAndRetag.Model
     {
         public event PropertyChangedEventHandler PropertyChanged;
         public int TrainingFileCount => new DirectoryInfo("./data/ori/labels/").EnumerateFiles().Count();
+        
 
         private Semaphore semaphore = new Semaphore(1, 1);
         private Semaphore semaphoreScr = new Semaphore(1, 1);
@@ -31,7 +32,7 @@ namespace AttentionAndRetag.Model
         }
         public bool isRunning { get; set; } = false;
         public bool isNotRunning => !isRunning;
-
+        
         public void RequestRun(Action a)
         {
             var val = semaphore.WaitOne(0);

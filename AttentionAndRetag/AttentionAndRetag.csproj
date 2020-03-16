@@ -12,28 +12,28 @@
 
   <ItemGroup>
     <Reference Include="BitMiracle.LibJpeg.NET">
-      <HintPath>..\..\..\..\Desktop\Code\ImageProcessing\Dist\BitMiracle.LibJpeg.NET.dll</HintPath>
+      <HintPath>..\..\..\Workspaces\ImageProcessing\Dist\BitMiracle.LibJpeg.NET.dll</HintPath>
     </Reference>
     <Reference Include="ImageProcessing.JPEGCodec">
-      <HintPath>..\..\..\..\Desktop\Code\ImageProcessing\Dist\ImageProcessing.JPEGCodec.dll</HintPath>
+      <HintPath>..\..\..\Workspaces\ImageProcessing\Dist\ImageProcessing.JPEGCodec.dll</HintPath>
     </Reference>
     <Reference Include="ImageProcessing.PNGCodec">
-      <HintPath>..\..\..\..\Desktop\Code\ImageProcessing\Dist\ImageProcessing.PNGCodec.dll</HintPath>
+      <HintPath>..\..\..\Workspaces\ImageProcessing\Dist\ImageProcessing.PNGCodec.dll</HintPath>
     </Reference>
     <Reference Include="MoyskleyTech.ImageProcessing">
-      <HintPath>..\..\..\..\Desktop\Code\ImageProcessing\Dist\MoyskleyTech.ImageProcessing.dll</HintPath>
+      <HintPath>..\..\..\Workspaces\ImageProcessing\Dist\MoyskleyTech.ImageProcessing.dll</HintPath>
     </Reference>
     <Reference Include="MoyskleyTech.ImageProcessing.Recognition">
-      <HintPath>..\..\..\..\Desktop\Code\ImageProcessing\Dist\MoyskleyTech.ImageProcessing.Recognition.dll</HintPath>
+      <HintPath>..\..\..\Workspaces\ImageProcessing\Dist\MoyskleyTech.ImageProcessing.Recognition.dll</HintPath>
     </Reference>
     <Reference Include="MoyskleyTech.ImageProcessing.WPF">
-      <HintPath>..\..\..\..\Desktop\Code\ImageProcessing\Dist\MoyskleyTech.ImageProcessing.WPF.dll</HintPath>
+      <HintPath>..\..\..\Workspaces\ImageProcessing\Dist\MoyskleyTech.ImageProcessing.WPF.dll</HintPath>
     </Reference>
     <Reference Include="MoyskleyTech.Math">
-      <HintPath>..\..\..\..\Desktop\Code\ImageProcessing\Dist\MoyskleyTech.Math.dll</HintPath>
+      <HintPath>..\..\..\Workspaces\ImageProcessing\Dist\MoyskleyTech.Math.dll</HintPath>
     </Reference>
     <Reference Include="MoyskleyTech.Serialization">
-      <HintPath>..\..\..\..\Desktop\Code\ImageProcessing\Dist\MoyskleyTech.Serialization.dll</HintPath>
+      <HintPath>..\..\..\Workspaces\ImageProcessing\Dist\MoyskleyTech.Serialization.dll</HintPath>
     </Reference>
   </ItemGroup>
 
