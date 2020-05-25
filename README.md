@@ -1,18 +1,18 @@
 This repo contains code for the DRAL(Digital Representation of Attention Labeler)
 
 When started, this labeller uses the following shortcuts:
-#DRAL
+# DRAL
 
-##Requirements
+## Requirements
 - Windows machine with WPF
 - .Net Core 3.1
 - Visual Studio 2019
-##Usage
+## Usage
 - Load labels
 - Load an image
 - Move the cursor to display the image
 - Save
-##Shortcuts 
+## Shortcuts 
 | Shortcut | Action                                               | Alternate shortcut |
 | -------- | ---------------------------------------------------- | ------------------ |
 | CTRL-B   | Load next image                                      | CTRL-Y             |
@@ -25,5 +25,5 @@ When started, this labeller uses the following shortcuts:
 | CTRL-Y   | Load next image                                      | CTRL-B             |
 | CTRL-Z   | Cancel the current image labelling and load previous |
 
-##WIP
+## WIP
 - Linux version coming soon
