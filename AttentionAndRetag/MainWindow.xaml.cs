@@ -135,7 +135,10 @@ namespace AttentionAndRetag
             {
                 Next();
             }
-
+            if (e == Key.W && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                NextUntilNotRecorded();
+            }
         }
 
         private void Previous(bool v)
@@ -171,8 +174,32 @@ namespace AttentionAndRetag
             while (lbl == null)
             {
                 attentionHandler.Next();
+                lbl = manager.GetLabel(attentionHandler.Filename);
             }
             LoadImageInformation(attentionHandler.Filename);
+        }
+        private void NextUntilNotRecorded()
+        {
+            while (ExistsInTraining())
+            {
+                attentionHandler.FastNext();
+
+                var lbl = manager.GetLabel(attentionHandler.Filename);
+                while (lbl == null)
+                {
+                    attentionHandler.FastNext();
+                    lbl = manager.GetLabel(attentionHandler.Filename);
+                }
+            }
+            attentionHandler.LoadCurrent();
+            LoadImageInformation(attentionHandler.Filename);
+        }
+
+        private bool ExistsInTraining()
+        {
+            var _name_ = attentionHandler.Filename;
+            var img_path = "./data/imp/images/" + _name_ + ".jpg";
+            return (System.IO.File.Exists(img_path));
         }
 
         private async void SaveClick(object sender, RoutedEventArgs e)

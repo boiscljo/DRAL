@@ -91,15 +91,29 @@ namespace AttentionAndRetag.Attention
                 ImageIndex = 0;
             FileInfo fi = files[ImageIndex];
             Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
+            LoadCurrent();
+
+            return fi.FullName;
+        }
+        public string FastNext()
+        {
+            ImageIndex++;
+            if (ImageIndex > files.Length)
+                ImageIndex = 0;
+            FileInfo fi = files[ImageIndex];
+            Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
+
+            return fi.FullName;
+        }
+        public void LoadCurrent()
+        {
             var factory = new BitmapFactory();
+            FileInfo fi = files[ImageIndex];
             using (var s = System.IO.File.OpenRead(fi.FullName))
                 img = factory.Decode(s);
 
             attentionMap = new Image<double>(img.Width, img.Height);
             attentionMap.ApplyFilter((px, pt) => 0);
-
-
-            return fi.FullName;
         }
         public string Previous()
         {
