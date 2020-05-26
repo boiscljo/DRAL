@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>DRAL</RootNamespace>
+    <AssemblyName>DRAL</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>false</Optimize>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GtkSharp" Version="3.22.25.74" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BitMiracle.LibJpeg.NET">
+      <HintPath>DLL\BitMiracle.LibJpeg.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="ImageProcessing.JPEGCodec">
+      <HintPath>DLL\ImageProcessing.JPEGCodec.dll</HintPath>
+    </Reference>
+    <Reference Include="ImageProcessing.PNGCodec">
+      <HintPath>DLL\ImageProcessing.PNGCodec.dll</HintPath>
+    </Reference>
+    <Reference Include="MoyskleyTech.ImageProcessing">
+      <HintPath>DLL\MoyskleyTech.ImageProcessing.dll</HintPath>
+    </Reference>
+    <Reference Include="MoyskleyTech.ImageProcessing.Recognition">
+      <HintPath>DLL\MoyskleyTech.ImageProcessing.Recognition.dll</HintPath>
+    </Reference>
+    <Reference Include="MoyskleyTech.Math">
+      <HintPath>DLL\MoyskleyTech.Math.dll</HintPath>
+    </Reference>
+    <Reference Include="MoyskleyTech.Serialization">
+      <HintPath>DLL\MoyskleyTech.Serialization.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
