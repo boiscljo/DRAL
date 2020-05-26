@@ -26,4 +26,3 @@ When started, this labeller uses the following shortcuts:
 | CTRL-Z   | Cancel the current image labelling and load previous |
 
 ## WIP
-- Linux version coming soon

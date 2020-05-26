@@ -56,6 +56,10 @@ namespace DRAL.UI
             Button buttonSave = new Button() { Label = "Save" };
             buttonSave.Clicked += ButtonSave_Clicked;
             menu.Add(buttonSave);
+            Button btnFixMissing = new Button() { Label = "Fix missing maps" };
+            btnFixMissing.Clicked += BtnFixMissing_Clicked;
+            menu.Add(btnFixMissing);
+
             lblCount = new Label("0");
             menu.Add(lblCount);
             Label lblImageInTraining = new Label("images in training");
@@ -116,6 +120,8 @@ namespace DRAL.UI
             //Show Everything
             gtkWin.DeleteEvent += delegate { Application.Quit(); };
         }
+
+     
 
         private void Black_Drawn(object o, DrawnArgs args)
         {

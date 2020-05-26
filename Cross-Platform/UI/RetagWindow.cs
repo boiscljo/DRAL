@@ -8,10 +8,12 @@ using Gtk;
 using ImageProcessing.JPEGCodec;
 using ImageProcessing.PNGCodec;
 using Microsoft.VisualBasic;
+using MoyskleyTech.ImageProcessing;
 using MoyskleyTech.ImageProcessing.Image;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Rectangle = MoyskleyTech.ImageProcessing.Image.Rectangle;
@@ -179,6 +181,7 @@ namespace DRAL.UI
                         Directory.CreateDirectory("./data/ori/labels");
                         Directory.CreateDirectory("./data/imp/images");
                         Directory.CreateDirectory("./data/imp/labels");
+                        Directory.CreateDirectory("./data/map/images");
 
                         PresentResult pr = new PresentResult();
                         
@@ -347,6 +350,68 @@ namespace DRAL.UI
             left.Move(viewCircle, (int)dispBeginX, (int)dispBeginY);
             viewCircle.WidthRequest = Math.Max(0, (int)(pictureBox.WidthRequest - dispBeginX));
             viewCircle.HeightRequest = Math.Max(0, (int)(pictureBox.HeightRequest - dispBeginY));
+        }
+        private void BtnFixMissing_Clicked(object sender, EventArgs e)
+        {
+            Directory.CreateDirectory("./data");
+            Directory.CreateDirectory("./data/ori/images");
+            Directory.CreateDirectory("./data/ori/labels");
+            Directory.CreateDirectory("./data/imp/images");
+            Directory.CreateDirectory("./data/imp/labels");
+            Directory.CreateDirectory("./data/map/images");
+
+            var originals = (from x in Directory.GetFiles("./data/ori/images") select new FileInfo(x).Name).ToArray();
+            var finals = (from x in Directory.GetFiles("./data/imp/images") select new FileInfo(x).Name).ToArray();
+            var maps = (from x in Directory.GetFiles("./data/map/images") select new FileInfo(x).Name).ToArray();
+
+            var bf = new BitmapFactory();
+
+            foreach (var ori in originals)
+            {
+                if (!maps.Contains(ori))
+                {
+                    //Map is missing
+
+                    var ori_img = bf.Decode("./data/ori/images/" + ori);
+                    var fin_img = bf.Decode("./data/imp/images/" + ori);
+                    var map = Image<byte>.Create(ori_img.Width, ori_img.Height);
+
+                    for (var x = 0; x < ori_img.Width; x++)
+                    {
+                        for (var y = 0; y < ori_img.Height; y++)
+                        {
+                            var ori_px = ori_img[x, y];
+                            var end_px = fin_img[x, y];
+
+                            var min_a_r = 0;
+                            if(ori_px.R!=128) min_a_r=(end_px.R * 255 - 128 * 255) / (ori_px.R - 128);
+                            var min_a_g = 0;
+                            if (ori_px.G != 128) min_a_g = (end_px.G * 255 - 128 * 255) / (ori_px.G - 128);
+                            var min_a_b = 0;
+                            if (ori_px.B != 128) min_a_b = (end_px.B * 255 - 128 * 255) / (ori_px.B - 128);
+
+                            var nb_val_r = 255; if (ori_px.R != 128) nb_val_r = 255 / (Math.Abs(128 - ori_px.R));
+                            var nb_val_g = 255; if (ori_px.G != 128) nb_val_g = 255 / (Math.Abs(128 - ori_px.G));
+                            var nb_val_b = 255; if (ori_px.B != 128) nb_val_b = 255 / (Math.Abs(128 - ori_px.B));
+
+                            var vals_r = Enumerable.Range(min_a_r, nb_val_r);
+                            var vals_g = Enumerable.Range(min_a_g, nb_val_g);
+                            var vals_b = Enumerable.Range(min_a_b, nb_val_b);
+
+                            var possible_values = vals_r.Union(vals_g).Union(vals_b).ToArray();
+
+                            if (possible_values.Length == 0)
+                                MessageBox.ShowError(gtkWin, "Impossible solution");
+                            map[x, y] = (byte)possible_values.FirstOrDefault();
+                        }
+                    }
+                    
+                    map.SaveJPG("./data/map/images/" + ori);
+                    
+                }
+            }
+
+           
         }
         private void Da_Drawn(object o, DrawnArgs args)
         {
