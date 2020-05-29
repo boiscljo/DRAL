@@ -47,6 +47,9 @@ namespace AttentionAndRetag.Attention
                 });
             }
         }
+
+       
+
         public void Reset()
         {
             attentionMap?.ApplyFilter((px, pt) => 0);
@@ -171,5 +174,6 @@ namespace AttentionAndRetag.Attention
         {
             return img.Clone();
         }
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using DRAL.UI;
+﻿using DRAL;
+using DRAL.UI;
 using DRAL.UI;
 using MoyskleyTech.ImageProcessing;
 using MoyskleyTech.ImageProcessing.Image;
@@ -40,10 +41,13 @@ namespace AttentionAndRetag.Model
             isRunning = v;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(isRunning)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(isNotRunning)));
+            if (Program.withWindow)
+                foreach (var b in win.buttons)
+                    b.Sensitive = !v;
         }
         public bool isRunning { get; set; } = false;
         public bool isNotRunning => !isRunning;
-        
+
         public void RequestRun(Action a)
         {
             var val = semaphore.WaitOne(0);
@@ -63,7 +67,7 @@ namespace AttentionAndRetag.Model
             {
                 var applied = await Task.Run(generator);
                 img.Image = applied.ConvertTo<Pixel>();
-              
+
                 semaphoreScr.Release();
             }
         }
@@ -106,6 +110,10 @@ namespace AttentionAndRetag.Model
         public void HadChangedTraining()
         {
             EmitChanged(nameof(TrainingFileCount));
+            if (Program.verbose)
+            {
+                Console.WriteLine(TrainingFileCount + " files in training");
+            }
         }
     }
 }

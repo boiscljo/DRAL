@@ -9,6 +9,7 @@ namespace DRAL.UI
 {
     partial class RetagWindow
     {
+        private CheckButton chkGenNow;
         private Label lblCount;
         private Window gtkWin;
         private FixedSizeImage iOri;
@@ -22,7 +23,7 @@ namespace DRAL.UI
         private DrawingArea rectangle_right;
         private DrawingArea rectangle_bottom;
         private DrawingArea viewCircle;
-
+        internal List<Button> buttons = new List<Button>();
         public string Count
         {
             get
@@ -50,15 +51,22 @@ namespace DRAL.UI
             Button buttonLoadLabels = new Button() { Label = "Load labels" };
             buttonLoadLabels.Clicked += ButtonLoadLabels_Clicked;
             menu.Add(buttonLoadLabels);
+            buttons.Add(buttonLoadLabels);
             Button buttonLoadImages = new Button() { Label = "Load Image" };
             buttonLoadImages.Clicked += ButtonLoadImages_Clicked;
             menu.Add(buttonLoadImages);
+            buttons.Add(buttonLoadImages);
             Button buttonSave = new Button() { Label = "Save" };
             buttonSave.Clicked += ButtonSave_Clicked;
             menu.Add(buttonSave);
-            Button btnFixMissing = new Button() { Label = "Fix missing maps" };
+            buttons.Add(buttonSave);
+            Button btnFixMissing = new Button() { Label = "Repair Dataset" };
             btnFixMissing.Clicked += BtnFixMissing_Clicked;
             menu.Add(btnFixMissing);
+            buttons.Add(btnFixMissing);
+            chkGenNow = new CheckButton("Generate now");
+            chkGenNow.Active = true;
+            menu.Add(chkGenNow);
 
             lblCount = new Label("0");
             menu.Add(lblCount);

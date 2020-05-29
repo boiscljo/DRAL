@@ -53,6 +53,13 @@ namespace DRAL.UI
             model = new DisplayModel(this);
 
             last = new PointF(-windowSize, -windowSize);
+
+            Directory.CreateDirectory("./data");
+            Directory.CreateDirectory("./data/ori/images");
+            Directory.CreateDirectory("./data/ori/labels");
+            Directory.CreateDirectory("./data/imp/images");
+            Directory.CreateDirectory("./data/imp/labels");
+            Directory.CreateDirectory("./data/map/images");
         }
         public void Show()
         {
@@ -91,37 +98,36 @@ namespace DRAL.UI
         private async void GtkWin_KeyPressEvent(object o, KeyPressEventArgs args)
         {
             var e = args.Event.Key;
-            if (e == Gdk.Key.r && args.Event.State == Gdk.ModifierType.ControlMask)
+            if ((e == Gdk.Key.r|| e == Gdk.Key.R) && args.Event.State == Gdk.ModifierType.ControlMask)
             {
                 attentionHandler.Reset();
             }
-            if (e == Gdk.Key.o && args.Event.State == Gdk.ModifierType.ControlMask)
+            if ((e == Gdk.Key.o|| e == Gdk.Key.O) && args.Event.State == Gdk.ModifierType.ControlMask)
             {
                 OpenImage();
             }
-            if (e == Gdk.Key.s && args.Event.State == Gdk.ModifierType.ControlMask)
+            if ((e == Gdk.Key.s|| e == Gdk.Key.S) && args.Event.State == Gdk.ModifierType.ControlMask)
             {
                 await GenerateAndSave();
             }
-            if (e == Gdk.Key.z && args.Event.State == Gdk.ModifierType.ControlMask)
+            if ((e == Gdk.Key.z|| e == Gdk.Key.Z) && args.Event.State == Gdk.ModifierType.ControlMask)
             {
                 Previous(true);
             }
-            if (e == Gdk.Key.x && args.Event.State == Gdk.ModifierType.ControlMask)
+            if ((e == Gdk.Key.x|| e == Gdk.Key.X) && args.Event.State == Gdk.ModifierType.ControlMask)
             {
                 Previous(false);
             }
-            if (e == Gdk.Key.n && args.Event.State == Gdk.ModifierType.ControlMask)
+            if ((e == Gdk.Key.n|| e== Gdk.Key.t|| e == Gdk.Key.N || e == Gdk.Key.T) && args.Event.State == Gdk.ModifierType.ControlMask)
             {
                 if (await GenerateAndSave())
                     Next();
             }
-            if ((e == Gdk.Key.y && args.Event.State == Gdk.ModifierType.ControlMask) ||
-                (e == Gdk.Key.b && args.Event.State == Gdk.ModifierType.ControlMask))
+            if ((e == Gdk.Key.y|| e == Gdk.Key.b|| e == Gdk.Key.Y|| e == Gdk.Key.B) && args.Event.State == Gdk.ModifierType.ControlMask)
             {
                 Next();
             }
-            if (e == Gdk.Key.w && args.Event.State == Gdk.ModifierType.ControlMask)
+            if ((e == Gdk.Key.w|| e == Gdk.Key.W) && args.Event.State == Gdk.ModifierType.ControlMask)
             {
                 NextUntilNotRecorded();
             }
@@ -144,7 +150,7 @@ namespace DRAL.UI
                 manager.SaveConfig();
                 LoadImageInformation(fc.Filename);
             }
-            
+
             //Destroy() to close the File Dialog
             fc.Dispose();
         }
@@ -167,9 +173,10 @@ namespace DRAL.UI
             {
                 try
                 {
-
+                    
                     if (attentionHandler.IsSet())
                     {
+                        DateTime beginPopup = DateTime.Now;
                         Image<byte> grayscale = null;
                         Image<Pixel> applied = null;
                         var _name_ = attentionHandler.Filename;
@@ -184,22 +191,27 @@ namespace DRAL.UI
                         Directory.CreateDirectory("./data/map/images");
 
                         PresentResult pr = new PresentResult();
-                        
+
                         pr.iActivated.Image = applied;
                         pr.iOri.Image = attentionHandler.Image;
                         pr.iActivation.Image = grayscale.ConvertTo<Pixel>();
 
                         if ((ret = await pr.ShowDialogAsync()))
                         {
-                            var newLabel = await retag.ImproveLabel(iActivated, attentionHandler.Image, grayscale, label);
-
+                            if (chkGenNow.Active)
+                            {
+                                var newLabel = await retag.ImproveLabel(iActivated, attentionHandler.Image, grayscale, label);
+                                SaveLabel("./data/imp/labels/" + _name_ + ".txt", newLabel, attentionHandler.Image.Width, attentionHandler.Image.Height);
+                            }
                             SaveFile_("./data/ori/images/" + _name_ + ".jpg", attentionHandler.Image);
                             SaveLabel("./data/ori/labels/" + _name_ + ".txt", label, attentionHandler.Image.Width, attentionHandler.Image.Height);
                             SaveFile_("./data/imp/images/" + _name_ + ".jpg", applied);
-                            SaveLabel("./data/imp/labels/" + _name_ + ".txt", newLabel, attentionHandler.Image.Width, attentionHandler.Image.Height);
+                            SaveFile_("./data/map/images/" + _name_ + ".jpg", grayscale.ConvertTo<Pixel>());
                             model.HadChangedTraining();
                         }
+                        DateTime endPopup = DateTime.Now;
 
+                        lastUpdate += (endPopup - beginPopup);
                     }
                 }
                 catch (Exception e)
@@ -253,6 +265,7 @@ namespace DRAL.UI
                 DeleteIfExists("./data/ori/labels/" + _name_ + ".txt");
                 DeleteIfExists("./data/imp/images/" + _name_ + ".jpg");
                 DeleteIfExists("./data/imp/labels/" + _name_ + ".txt");
+                DeleteIfExists("./data/map/images/" + _name_ + ".txt");
             }
         }
 
@@ -303,7 +316,7 @@ namespace DRAL.UI
             var lbl = manager.GetLabel(attentionHandler.Filename);
             if (lbl == null)
             {
-                MessageBox.Show(gtkWin,"Could not tag an image without label, choose another");
+                MessageBox.Show(gtkWin, "Could not tag an image without label, choose another");
             }
             else
             {
@@ -339,8 +352,8 @@ namespace DRAL.UI
             rectangle_left.HeightRequest = pictureBox.HeightRequest;
             rectangle_left.WidthRequest = (int)Math.Max(dispBeginX, 0);
 
-            left.Move(rectangle_bottom, 0, Math.Min((int)dispEndY,pictureBox.HeightRequest));
-            rectangle_bottom.HeightRequest = Math.Max(0,(int)(pictureBox.HeightRequest - dispEndY));
+            left.Move(rectangle_bottom, 0, Math.Min((int)dispEndY, pictureBox.HeightRequest));
+            rectangle_bottom.HeightRequest = Math.Max(0, (int)(pictureBox.HeightRequest - dispEndY));
             rectangle_bottom.WidthRequest = pictureBox.WidthRequest;
 
             left.Move(rectangle_right, Math.Min((int)dispEndX, pictureBox.WidthRequest), 0);
@@ -351,68 +364,207 @@ namespace DRAL.UI
             viewCircle.WidthRequest = Math.Max(0, (int)(pictureBox.WidthRequest - dispBeginX));
             viewCircle.HeightRequest = Math.Max(0, (int)(pictureBox.HeightRequest - dispBeginY));
         }
-        private void BtnFixMissing_Clicked(object sender, EventArgs e)
+        private async void BtnFixMissing_Clicked(object sender, EventArgs e)
         {
-            Directory.CreateDirectory("./data");
-            Directory.CreateDirectory("./data/ori/images");
-            Directory.CreateDirectory("./data/ori/labels");
-            Directory.CreateDirectory("./data/imp/images");
-            Directory.CreateDirectory("./data/imp/labels");
-            Directory.CreateDirectory("./data/map/images");
-
-            var originals = (from x in Directory.GetFiles("./data/ori/images") select new FileInfo(x).Name).ToArray();
-            var finals = (from x in Directory.GetFiles("./data/imp/images") select new FileInfo(x).Name).ToArray();
-            var maps = (from x in Directory.GetFiles("./data/map/images") select new FileInfo(x).Name).ToArray();
-
-            var bf = new BitmapFactory();
-
-            foreach (var ori in originals)
-            {
-                if (!maps.Contains(ori))
-                {
-                    //Map is missing
-
-                    var ori_img = bf.Decode("./data/ori/images/" + ori);
-                    var fin_img = bf.Decode("./data/imp/images/" + ori);
-                    var map = Image<byte>.Create(ori_img.Width, ori_img.Height);
-
-                    for (var x = 0; x < ori_img.Width; x++)
-                    {
-                        for (var y = 0; y < ori_img.Height; y++)
-                        {
-                            var ori_px = ori_img[x, y];
-                            var end_px = fin_img[x, y];
-
-                            var min_a_r = 0;
-                            if(ori_px.R!=128) min_a_r=(end_px.R * 255 - 128 * 255) / (ori_px.R - 128);
-                            var min_a_g = 0;
-                            if (ori_px.G != 128) min_a_g = (end_px.G * 255 - 128 * 255) / (ori_px.G - 128);
-                            var min_a_b = 0;
-                            if (ori_px.B != 128) min_a_b = (end_px.B * 255 - 128 * 255) / (ori_px.B - 128);
-
-                            var nb_val_r = 255; if (ori_px.R != 128) nb_val_r = 255 / (Math.Abs(128 - ori_px.R));
-                            var nb_val_g = 255; if (ori_px.G != 128) nb_val_g = 255 / (Math.Abs(128 - ori_px.G));
-                            var nb_val_b = 255; if (ori_px.B != 128) nb_val_b = 255 / (Math.Abs(128 - ori_px.B));
-
-                            var vals_r = Enumerable.Range(min_a_r, nb_val_r);
-                            var vals_g = Enumerable.Range(min_a_g, nb_val_g);
-                            var vals_b = Enumerable.Range(min_a_b, nb_val_b);
-
-                            var possible_values = vals_r.Union(vals_g).Union(vals_b).ToArray();
-
-                            if (possible_values.Length == 0)
-                                MessageBox.ShowError(gtkWin, "Impossible solution");
-                            map[x, y] = (byte)possible_values.FirstOrDefault();
-                        }
-                    }
-                    
-                    map.SaveJPG("./data/map/images/" + ori);
-                    
-                }
-            }
-
-           
+            await Fix();
         }
+
+        public async Task Fix()
+        {
+            if(await model.RequestRun())
+            {  
+                Directory.CreateDirectory("./data");
+                Directory.CreateDirectory("./data/ori/images");
+                Directory.CreateDirectory("./data/ori/labels");
+                Directory.CreateDirectory("./data/imp/images");
+                Directory.CreateDirectory("./data/imp/labels");
+                Directory.CreateDirectory("./data/map/images");
+
+                var originals_label = (from x in Directory.GetFiles("./data/ori/labels") select new FileInfo(x).Name).ToArray();
+                var finals_label = (from x in Directory.GetFiles("./data/imp/labels") select new FileInfo(x).Name).ToArray();
+                var bf = new BitmapFactory();
+
+                int countFix = 0;
+                //Fix untagged finals
+                if (originals_label.Length != finals_label.Length)
+                {
+                    //await Task.Run(async() =>
+                    {
+                        async Task action_fix_label(string label_path)
+                        {
+                            try
+                            {
+                                var fi = new FileInfo(label_path);
+
+                                var img = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
+                                var label = manager.GetLabel(img);
+
+                                var ori_img = bf.Decode("./data/ori/images/" + img + ".jpg");
+                                var grayscale = bf.Decode("./data/map/images/" + img + ".jpg");
+                                countFix++;
+                                if (Program.verbose)
+                                    Console.WriteLine("Fixing missing labels for " + label_path);
+                                if (Program.withWindow)
+                                {
+                                    Application.Invoke((_, _1) =>
+                                    {
+                                        iOri.Image = pictureBox.Image = ori_img;
+                                        iActivation.Image = grayscale;
+                                    });
+                                }
+
+                                var task = retag.ImproveLabel(Program.withWindow ? iActivated : null, ori_img, grayscale.ConvertTo<byte>(), label);
+                                var newLabel = await task;
+                                if (Program.verbose)
+                                    Console.WriteLine("Saving labels to ./data/imp/labels/" + label_path);
+                                SaveLabel("./data/imp/labels/" + label_path, newLabel, ori_img.Width, ori_img.Height);
+                            }
+                            catch (Exception er)
+                            {
+                                Console.WriteLine("[ERROR]" + er.Message + er.StackTrace + "[/ERROR]");
+                            }
+                        };
+                        var src = originals_label.Except(finals_label);
+                        if (Program.withWindow)//Must run on UI thread
+                            foreach (var label_path in src)
+                                await action_fix_label(label_path);
+                        else
+                            Parallel.ForEach(src, (r) => action_fix_label(r).Wait());
+                    }//);
+                }
+
+                var originals = (from x in Directory.GetFiles("./data/ori/images") select new FileInfo(x).Name).ToArray();
+                var finals = (from x in Directory.GetFiles("./data/imp/images") select new FileInfo(x).Name).ToArray();
+                var maps = (from x in Directory.GetFiles("./data/map/images") select new FileInfo(x).Name).ToArray();
+
+
+                //fix missing maps
+                Parallel.ForEach(originals, (ori) =>
+                {
+                    if (!maps.Contains(ori))
+                    {
+                        //Map is missing
+
+                        var ori_img = bf.Decode("./data/ori/images/" + ori);
+                        var fin_img = bf.Decode("./data/imp/images/" + ori);
+                        var map = Image<byte>.Create(ori_img.Width, ori_img.Height);
+                        countFix++;
+
+                        if (Program.verbose)
+                            Console.WriteLine("Fixing missing maps for " + ori);
+
+                        for (var x = 0; x < ori_img.Width; x++)
+                        {
+                            for (var y = 0; y < ori_img.Height; y++)
+                            {
+                                var ori_px = ori_img[x, y];
+                                var end_px = fin_img[x, y];
+
+                                var min_a_r = 0;
+                                if (ori_px.R != 128) min_a_r = (end_px.R * 255 - 128 * 255) / (ori_px.R - 128);
+                                var min_a_g = 0;
+                                if (ori_px.G != 128) min_a_g = (end_px.G * 255 - 128 * 255) / (ori_px.G - 128);
+                                var min_a_b = 0;
+                                if (ori_px.B != 128) min_a_b = (end_px.B * 255 - 128 * 255) / (ori_px.B - 128);
+
+                                var nb_val_r = 255; if (ori_px.R != 128) nb_val_r = 255 / (Math.Abs(128 - ori_px.R));
+                                var nb_val_g = 255; if (ori_px.G != 128) nb_val_g = 255 / (Math.Abs(128 - ori_px.G));
+                                var nb_val_b = 255; if (ori_px.B != 128) nb_val_b = 255 / (Math.Abs(128 - ori_px.B));
+
+                                var vals_r = Enumerable.Range(min_a_r, nb_val_r);
+                                var vals_g = Enumerable.Range(min_a_g, nb_val_g);
+                                var vals_b = Enumerable.Range(min_a_b, nb_val_b);
+
+                                var possible_values = vals_r.Union(vals_g).Union(vals_b).ToArray();
+
+                                if (possible_values.Length == 0)
+                                    MessageBox.ShowError(gtkWin, "Impossible solution");
+                                map[x, y] = (byte)possible_values.FirstOrDefault();
+                            }
+                        }
+
+                        map.SaveJPG("./data/map/images/" + ori);
+
+                    }
+                });
+
+                void DeleteIfExists(string path)
+                {
+                    if (Program.verbose)
+                        Console.WriteLine("Deleting orphan file " + path);
+                    if (System.IO.File.Exists(path))
+                        System.IO.File.Delete(path);
+                }
+                //orphans
+                int count_orphans = 0;
+                originals_label = (from fi in (from x in Directory.GetFiles("./data/ori/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                finals_label = (from fi in (from x in Directory.GetFiles("./data/imp/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                originals = (from fi in (from x in Directory.GetFiles("./data/ori/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                finals = (from fi in (from x in Directory.GetFiles("./data/imp/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                maps = (from fi in (from x in Directory.GetFiles("./data/map/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                //orphans in original
+                if (false && originals_label.Length != originals.Length)
+                {
+                    //orphans
+                    foreach (var label_without_image in originals_label.Except(originals))
+                    {
+                        count_orphans++;
+                        DeleteIfExists("./data/ori/labels/" + label_without_image + ".txt");
+                    }
+                    foreach (var image_without_label in originals.Except(originals_label))
+                    {
+                        count_orphans++;
+                        DeleteIfExists("./data/ori/images/" + image_without_label + ".jpg");
+                    }
+                }
+                //orphans in improved
+                if (false && finals_label.Length != finals.Length)
+                {
+                    //orphans
+                    foreach (var label_without_image in finals_label.Except(finals))
+                    {
+                        count_orphans++;
+                        DeleteIfExists("./data/imp/labels/" + label_without_image + ".txt");
+                    }
+                    foreach (var image_without_label in finals.Except(finals_label))
+                    {
+                        count_orphans++;
+                        DeleteIfExists("./data/imp/images/" + image_without_label + ".jpg");
+                    }
+                }
+                //originals do not have the same length as improved
+                if (false && originals.Length != finals.Length)
+                {
+                    foreach (var original_without_final in originals.Except(finals))
+                    {
+                        count_orphans++;
+                        DeleteIfExists("./data/ori/labels/" + original_without_final + ".txt");
+                        DeleteIfExists("./data/ori/images/" + original_without_final + ".jpg");
+                    }
+                    foreach (var final_without_original in finals.Except(originals))
+                    {
+                        count_orphans++;
+                        DeleteIfExists("./data/ori/labels/" + final_without_original + ".txt");
+                        DeleteIfExists("./data/ori/images/" + final_without_original + ".jpg");
+                    }
+                }
+                if (false && maps.Length != originals.Length)
+                {
+                    foreach (var map_without_ori in maps.Except(originals))
+                    {
+                        count_orphans++;
+                        DeleteIfExists("./data/map/images/" + map_without_ori + ".jpg");
+                    }
+                }
+                Application.Invoke((_, _1) =>
+                {
+                    MessageBox.Show(gtkWin, countFix + " errors has been fixed, " + count_orphans + " orphans file removed");
+                });
+                model.HadChangedTraining();
+                model.EndRun();
+            }
+        }
+
         private void Da_Drawn(object o, DrawnArgs args)
         {
             if (attentionHandler.Image != null)
@@ -422,7 +574,7 @@ namespace DRAL.UI
                 var winSizeXImg = scaleX * windowSize;
                 var winSizeYImg = scaleY * windowSize;
 
-                var SubImage = attentionHandler.Image[new Rectangle((int)(dispBeginX* scaleX), (int)(dispBeginY* scaleY), (int)(windowSize* scaleX), (int)(windowSize* scaleY))].ToImage<BGRA>();
+                var SubImage = attentionHandler.Image[new Rectangle((int)(dispBeginX * scaleX), (int)(dispBeginY * scaleY), (int)(windowSize * scaleX), (int)(windowSize * scaleY))].ToImage<BGRA>();
                 var img = SubImage.Rescale(windowSize, windowSize, ScalingMode.AverageInterpolate);
                 ImageSurface ims = new ImageSurface(img.DataPointer, Format.Argb32, img.Width, img.Height, img.Width * 4);
                 DrawingArea da = (DrawingArea)o;

@@ -36,8 +36,8 @@ namespace AttentionAndRetag.Retag
             List<Rectangle3> rectangles = (from x in clusters select ToBox(x.Data)).ToList();
             for (var i = 0; i < workingSet.Count; i++)
             {
-                if (workingSet[i].Centroid.X == 0)
-                    Console.WriteLine("");
+                //if (workingSet[i].Centroid.X == 0)
+                    //Console.WriteLine("");
 
                 var box = ToBox(workingSet[i].Data);
                 var tmp = Image<bool>.Create((int)rectangles[i].Size.X, (int)rectangles[i].Size.Y);
@@ -182,10 +182,11 @@ namespace AttentionAndRetag.Retag
 
                 foreach (var pixel in cluster.Data)
                 {
-                    image[(int)pixel.X, (int)pixel.Y] = color;
+                    if(graphics!=null)
+                        image[(int)pixel.X, (int)pixel.Y] = color;
                 }
             }
-            graphics.DrawImage(image, 0, 0);
+            graphics?.DrawImage(image, 0, 0);
             foreach (var clusterC in clustersWithColor)
             {
                 var cluster = clusterC.First;
@@ -193,9 +194,9 @@ namespace AttentionAndRetag.Retag
 
                 var box = ToBox(cluster.Data);
                 if (box.IsValid)
-                    graphics.DrawRectangle(color, box.Location.X, box.Location.Y, box.Size.X, box.Size.Y, 5);
+                    graphics?.DrawRectangle(color, box.Location.X, box.Location.Y, box.Size.X, box.Size.Y, 5);
             }
-            graphics.DrawString("p=" + p + ",wz=" + wz, Pixels.DeepPink, 0, 0, BaseFonts.Premia, 3);
+            graphics?.DrawString("p=" + p + ",wz=" + wz, Pixels.DeepPink, 0, 0, BaseFonts.Premia, 3);
             var boxes = ToBox(clusters);
             return To2D(boxes);
         }

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Cairo;
 using Gtk;
 using DRAL.UI;
+using DRAL;
 
 namespace AttentionAndRetag.Retag
 {
@@ -16,15 +17,26 @@ namespace AttentionAndRetag.Retag
     {
         public ConfigurationManager ConfigurationManager { get; set; }
 
-        public async Task<IMAGE_LABEL_INFO> ImproveLabel(FixedSizeImage iActivated,Image<Pixel> img, Image<byte> gray, IMAGE_LABEL_INFO label)
+        public async Task<IMAGE_LABEL_INFO> ImproveLabel(FixedSizeImage iActivated, Image<Pixel> img, Image<byte> gray, IMAGE_LABEL_INFO label)
         {
             var ctx = img.Clone();
-            MoyskleyTech.ImageProcessing.Image.Graphics<Pixel> graphics = MoyskleyTech.ImageProcessing.Image.Graphics.FromImage(ctx);
+
+
+            MoyskleyTech.ImageProcessing.Image.Graphics<Pixel> graphics=null;
+            if (iActivated != null)
+            {
+                graphics = MoyskleyTech.ImageProcessing.Image.Graphics.FromImage(ctx);
+                Application.Invoke((_, _1) =>
+                {
+                    iActivated.Image = ctx;
+                });
+            }
             //ctx.Width = gray.Width;
             //ctx.Height = gray.Height;
-            graphics.Clear(Pixels.White);
-            graphics.DrawImage(img, 0, 0);
-            iActivated.Image = ctx;
+            graphics?.Clear(Pixels.White);
+            graphics?.DrawImage(img, 0, 0);
+
+
             List<RectangleF> proposedBoxes = new List<RectangleF>();
 
             AttentionMapAnaliser c = new AttentionMapAnaliser();
@@ -38,15 +50,27 @@ namespace AttentionAndRetag.Retag
                     })
             {
                 proposedBoxes.AddRange(await c.Cluster(gray.ConvertTo<Pixel>(), graphics, cfg.p, cfg.wz));
-                iActivated.Image = ctx;
+                if (iActivated != null)
+                    Application.Invoke((_, _1) =>
+                    {
+                        iActivated.Image = ctx;
+                    });
+                if (Program.verbose)
+                {
+                    Console.WriteLine("{2} MODE {0} {1}",cfg.p, cfg.wz, label.name);
+                }
             }
 
             label = label.Clone();
             c.AdaptLabel(proposedBoxes, label, .9, .9, .25);
-            iActivated.Image = ctx;
+            if (iActivated != null)
+                Application.Invoke((_, _1) =>
+                {
+                    iActivated.Image = ctx;
+                });
             return label;
         }
-        public string GenerateFile(IMAGE_LABEL_INFO label,double w, double h)
+        public string GenerateFile(IMAGE_LABEL_INFO label, double w, double h)
         {
             var possibleBox = label.labels.Where((x) => x.box2d != null && ConfigurationManager.IsKnownCategory(x.category)).ToList();
             var possibleLines = possibleBox.Select((x) =>
@@ -62,7 +86,7 @@ namespace AttentionAndRetag.Retag
 
         public void Init()
         {
-            
+
         }
     }
 }
