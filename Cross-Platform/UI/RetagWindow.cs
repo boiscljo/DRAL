@@ -40,6 +40,12 @@ namespace DRAL.UI
             Init();
             PngCodec.Register();
             JPEGCodec.Register();
+            Directory.CreateDirectory("./data");
+            Directory.CreateDirectory("./data/ori/images");
+            Directory.CreateDirectory("./data/ori/labels");
+            Directory.CreateDirectory("./data/imp/images");
+            Directory.CreateDirectory("./data/imp/labels");
+            Directory.CreateDirectory("./data/map/images");
 
             manager = new ConfigurationManager();
             attentionHandler = new AttentionHandler() { ConfigurationManager = manager };
@@ -53,13 +59,6 @@ namespace DRAL.UI
             model = new DisplayModel(this);
 
             last = new PointF(-windowSize, -windowSize);
-
-            Directory.CreateDirectory("./data");
-            Directory.CreateDirectory("./data/ori/images");
-            Directory.CreateDirectory("./data/ori/labels");
-            Directory.CreateDirectory("./data/imp/images");
-            Directory.CreateDirectory("./data/imp/labels");
-            Directory.CreateDirectory("./data/map/images");
         }
         public void Show()
         {
