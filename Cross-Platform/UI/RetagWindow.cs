@@ -97,36 +97,33 @@ namespace DRAL.UI
         private async void GtkWin_KeyPressEvent(object o, KeyPressEventArgs args)
         {
             var e = args.Event.Key;
-            if ((e == Gdk.Key.r|| e == Gdk.Key.R) && args.Event.State == Gdk.ModifierType.ControlMask)
+            //Console.WriteLine(e.ToString() + args.Event.State.ToString());
+            if ((e == Gdk.Key.r|| e == Gdk.Key.R) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
             {
                 attentionHandler.Reset();
             }
-            if ((e == Gdk.Key.o|| e == Gdk.Key.O) && args.Event.State == Gdk.ModifierType.ControlMask)
+            if ((e == Gdk.Key.o|| e == Gdk.Key.O) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
             {
                 OpenImage();
             }
-            if ((e == Gdk.Key.s|| e == Gdk.Key.S) && args.Event.State == Gdk.ModifierType.ControlMask)
-            {
-                await GenerateAndSave();
-            }
-            if ((e == Gdk.Key.z|| e == Gdk.Key.Z) && args.Event.State == Gdk.ModifierType.ControlMask)
+            if ((e == Gdk.Key.z|| e == Gdk.Key.Z) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
             {
                 Previous(true);
             }
-            if ((e == Gdk.Key.x|| e == Gdk.Key.X) && args.Event.State == Gdk.ModifierType.ControlMask)
+            if ((e == Gdk.Key.x|| e == Gdk.Key.X) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
             {
                 Previous(false);
             }
-            if ((e == Gdk.Key.n|| e== Gdk.Key.t|| e == Gdk.Key.N || e == Gdk.Key.T) && args.Event.State == Gdk.ModifierType.ControlMask)
+            if ((e == Gdk.Key.n|| e== Gdk.Key.s|| e == Gdk.Key.N || e == Gdk.Key.S) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
             {
                 if (await GenerateAndSave())
                     Next();
             }
-            if ((e == Gdk.Key.y|| e == Gdk.Key.b|| e == Gdk.Key.Y|| e == Gdk.Key.B) && args.Event.State == Gdk.ModifierType.ControlMask)
+            if ((e == Gdk.Key.y|| e == Gdk.Key.b|| e == Gdk.Key.Y|| e == Gdk.Key.B) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
             {
                 Next();
             }
-            if ((e == Gdk.Key.w|| e == Gdk.Key.W) && args.Event.State == Gdk.ModifierType.ControlMask)
+            if ((e == Gdk.Key.w|| e == Gdk.Key.W) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
             {
                 NextUntilNotRecorded();
             }

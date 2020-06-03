@@ -41,8 +41,14 @@ namespace AttentionAndRetag.Attention
                     var iy = (pt.Y / size.Height) * 2 - 1;
                     if (ix * ix + iy * iy > 1)//out of circle = original pixel
                         return px;
-                    var distanceFactor = 1 - (ix * ix + iy * iy);
+                    var distance = Math.Pow((ix * ix + iy * iy),0.5);
 
+                    //=2*(1- 2^(D1*A1+C1) / (2^(D1*A1+C1)+1))
+                    var _base = 1.5d;
+                    var _mult_dist = 8;
+                    var _off = -1;
+                    var _mult = 2;
+                    var distanceFactor = _mult * (1 - Math.Pow(_base, _mult_dist * distance + _off) / (Math.Pow(_base, _mult_dist * distance + _off) + 1));
                     return px += ts.TotalMilliseconds * distanceFactor * removeFactor;
                 });
             }

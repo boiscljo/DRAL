@@ -15,6 +15,8 @@ namespace DRAL.UI
         public void Init()
         {
             gtkWin = new Window("DRAL Retag");
+            var size = gtkWin.Display.PrimaryMonitor.Workarea.Size;
+            gtkWin.Resize(size.Width, size.Width / 4 + 30);
 
             Box vbox = new Box(Orientation.Vertical, 0);
             Box images = new Box(Orientation.Horizontal, 2);
@@ -23,7 +25,7 @@ namespace DRAL.UI
 
             vbox.Add(images);
             vbox.Add(buttons);
-            var siz = new MoyskleyTech.ImageProcessing.Image.Size(266, 200);
+            var siz = new MoyskleyTech.ImageProcessing.Image.Size(size.Width/3, size.Width/4);
             iOri = new FixedSizeImage(siz);
             iActivation = new FixedSizeImage(siz);
             iActivated = new FixedSizeImage(siz);
