@@ -14,6 +14,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Rectangle = MoyskleyTech.ImageProcessing.Image.Rectangle;
@@ -223,7 +225,7 @@ namespace DRAL.UI
             var pos = new PointF(args.Event.X, args.Event.Y);
 
             DisplayMaskOver(new PointF(pos.X, pos.Y));//Display mask
-            if (attentionHandler.IsSet())
+            if (attentionHandler.IsSet() && model.isNotRunning)
             {
                 var scaleX = (attentionHandler.Width / pictureBox.WidthRequest);
                 var scaleY = (attentionHandler.Height / pictureBox.HeightRequest);
@@ -374,12 +376,14 @@ namespace DRAL.UI
                 Directory.CreateDirectory("./data/ori/labels");
                 Directory.CreateDirectory("./data/imp/images");
                 Directory.CreateDirectory("./data/imp/labels");
+                Directory.CreateDirectory("./data/both/images");
+                Directory.CreateDirectory("./data/both/labels");
                 Directory.CreateDirectory("./data/map/images");
 
                 var originals_label = (from x in Directory.GetFiles("./data/ori/labels") select new FileInfo(x).Name).ToArray();
                 var finals_label = (from x in Directory.GetFiles("./data/imp/labels") select new FileInfo(x).Name).ToArray();
                 var bf = new BitmapFactory();
-
+                int missing_both=0;
                 int countFix = 0;
                 //Fix untagged finals
                 if (originals_label.Length != finals_label.Length)
@@ -491,6 +495,16 @@ namespace DRAL.UI
                     if (System.IO.File.Exists(path))
                         System.IO.File.Delete(path);
                 }
+                void CopyIfNot(string path,string dest)
+                {
+                    if (!System.IO.File.Exists(dest))
+                    {
+                        if (Program.verbose)
+                            Console.WriteLine("Fixing missing file in both " + dest);
+                        missing_both++;
+                        System.IO.File.Copy(path, dest,true);
+                    }
+                }
                 //orphans
                 int count_orphans = 0;
                 originals_label = (from fi in (from x in Directory.GetFiles("./data/ori/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
@@ -552,9 +566,20 @@ namespace DRAL.UI
                         DeleteIfExists("./data/map/images/" + map_without_ori + ".jpg");
                     }
                 }
+
+                originals_label = (from fi in (from x in Directory.GetFiles("./data/ori/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                finals_label = (from fi in (from x in Directory.GetFiles("./data/imp/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                originals = (from fi in (from x in Directory.GetFiles("./data/ori/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                finals = (from fi in (from x in Directory.GetFiles("./data/imp/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+
+                foreach (var label in originals_label) CopyIfNot("./data/ori/labels/" + label + ".txt", "./data/both/labels/" + label + "_o.txt");
+                foreach (var label in finals_label) CopyIfNot("./data/imp/labels/" + label + ".txt", "./data/both/labels/" + label + "_i.txt");
+                foreach (var label in originals) CopyIfNot("./data/ori/images/" + label + ".jpg", "./data/both/images/" + label + "_o.jpg");
+                foreach (var label in finals) CopyIfNot("./data/imp/images/" + label + ".jpg", "./data/both/images/" + label + "_i.jpg");
+
                 Application.Invoke((_, _1) =>
                 {
-                    MessageBox.Show(gtkWin, countFix + " errors has been fixed, " + count_orphans + " orphans file removed");
+                    MessageBox.Show(gtkWin, countFix + " errors has been fixed, " + count_orphans + " orphans file removed, "+missing_both+" files missing in both");
                 });
                 model.HadChangedTraining();
                 model.EndRun();
@@ -569,21 +594,23 @@ namespace DRAL.UI
                 var scaleY = (attentionHandler.Height / pictureBox.HeightRequest);
                 var winSizeXImg = scaleX * windowSize;
                 var winSizeYImg = scaleY * windowSize;
-
-                var SubImage = attentionHandler.Image[new Rectangle((int)(dispBeginX * scaleX), (int)(dispBeginY * scaleY), (int)(windowSize * scaleX), (int)(windowSize * scaleY))].ToImage<BGRA>();
-                var img = SubImage.Rescale(windowSize, windowSize, ScalingMode.AverageInterpolate);
-                ImageSurface ims = new ImageSurface(img.DataPointer, Format.Argb32, img.Width, img.Height, img.Width * 4);
                 DrawingArea da = (DrawingArea)o;
                 var ctx = args.Cr;
                 ctx.SetSourceRGB(0, 0, 0);
                 ctx.Rectangle(0, 0, windowSize, windowSize);
                 ctx.Fill();
-                ctx.SetSource(ims);
-                ctx.Arc(windowSize / 2, windowSize / 2, windowSize / 2, 0, 2 * Math.PI);
-                ctx.Fill();
-                img.Dispose();
-                SubImage.Dispose();
-                ims.Dispose();
+                if (model.isNotRunning)
+                {
+                    var SubImage = attentionHandler.Image[new Rectangle((int)(dispBeginX * scaleX), (int)(dispBeginY * scaleY), (int)(windowSize * scaleX), (int)(windowSize * scaleY))].ToImage<BGRA>();
+                    var img = SubImage.Rescale(windowSize, windowSize, ScalingMode.AverageInterpolate);
+                    ImageSurface ims = new ImageSurface(img.DataPointer, Format.Argb32, img.Width, img.Height, img.Width * 4);
+                    ctx.SetSource(ims);
+                    ctx.Arc(windowSize / 2, windowSize / 2, windowSize / 2, 0, 2 * Math.PI);
+                    ctx.Fill();
+                    img.Dispose();
+                    SubImage.Dispose();
+                    ims.Dispose();
+                }
             }
         }
     }

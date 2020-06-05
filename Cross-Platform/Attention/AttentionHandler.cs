@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using AttentionAndRetag.Config;
+using DRAL;
+
 namespace AttentionAndRetag.Attention
 {
     public class AttentionHandler
@@ -88,7 +90,17 @@ namespace AttentionAndRetag.Attention
             if (loadFolder)
             {
                 files = dir.GetFiles();
-                ImageIndex = Array.IndexOf(files,file);
+                if (Program.verbose)
+                    Console.WriteLine("files[0]={0}, file={1}, files.Length={2}", files[0], file,files.Length);
+                ImageIndex = -1;
+                for (var i = 0; i < files.Length; i++)
+                    if (files[i].FullName == file.FullName)
+                    {
+                        ImageIndex = i;
+                        break;
+                    }
+                if (Program.verbose)
+                    Console.WriteLine("Loading image {0}", ImageIndex);
             }
 
             return img;
@@ -101,7 +113,8 @@ namespace AttentionAndRetag.Attention
             FileInfo fi = files[ImageIndex];
             Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
             LoadCurrent();
-
+            if (Program.verbose)
+                Console.WriteLine("Loading image {0}", ImageIndex);
             return fi.FullName;
         }
         public string FastNext()
@@ -111,7 +124,8 @@ namespace AttentionAndRetag.Attention
                 ImageIndex = 0;
             FileInfo fi = files[ImageIndex];
             Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
-
+            if (Program.verbose)
+                Console.WriteLine("Loading image {0}", ImageIndex);
             return fi.FullName;
         }
         public void LoadCurrent()
@@ -137,7 +151,8 @@ namespace AttentionAndRetag.Attention
 
             attentionMap = new Image<double>(img.Width, img.Height);
             attentionMap.ApplyFilter((px, pt) => 0);
-
+            if (Program.verbose)
+                Console.WriteLine("Loading image {0}", ImageIndex);
             return fi.FullName;
         }
         public void GenerateGrayscale(out Image<byte> grayscale)

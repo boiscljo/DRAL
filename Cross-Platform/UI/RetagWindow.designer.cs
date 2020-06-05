@@ -39,12 +39,24 @@ namespace DRAL.UI
         {
             gtkWin = new Window("DRAL Retag");
 
+            var size = gtkWin.Display.PrimaryMonitor.Workarea.Size;
+
             Image<Pixel> icon = new Image<Pixel>(32, 32);
             icon.ApplyFilter((_, _2) => Pixels.Black);
             Graphics.FromImage(icon).DrawString("DR", new FontSize(BaseFonts.Premia, 2), Pixels.Red, 0, 0);
             Graphics.FromImage(icon).DrawString("AL", new FontSize(BaseFonts.Premia, 2), Pixels.Red, 0, 16);
             gtkWin.Icon = GtkWrapper.ToPixbuf(icon);
-            gtkWin.Resize(1000, 600);
+            gtkWin.Resize(size.Width, size.Height);
+
+            //Wfrm = 13/9 of Wimg
+            //Wimg = 9*Wfrm/13
+            int maxImageWidth = 9 * size.Width / 13;
+            int maxImageHeight = size.Height - 100;
+            int maxImageWidthTakingImageHeight = maxImageHeight * 4 / 3;
+            int maxImageHeightTakingImageWidth = maxImageWidth * 3 / 4;
+
+            var imageWidth = Math.Min(maxImageWidth, maxImageWidthTakingImageHeight);
+            var imageHeight = Math.Min(maxImageHeight, maxImageHeightTakingImageWidth);
 
             Box bx = new Box(Orientation.Vertical, 1);
             Box menu = new Box(Orientation.Horizontal, 1);
@@ -78,8 +90,8 @@ namespace DRAL.UI
             left = new Fixed();
             evt.Add(left);
 
-            pictureBox = new FixedSizeImage(new MoyskleyTech.ImageProcessing.Image.Size(800,600));
-            pictureBox.WidthRequest = 800;
+            pictureBox = new FixedSizeImage(new MoyskleyTech.ImageProcessing.Image.Size(imageWidth,imageHeight));
+            pictureBox.WidthRequest = imageWidth;
             left.Put(pictureBox, 0,0);
 
             evt.AddEvents((int)Gdk.EventMask.AllEventsMask);
@@ -87,7 +99,7 @@ namespace DRAL.UI
 
             right = new Box(Orientation.Vertical, 1);
             right.WidthRequest = 200;
-            var siz = new MoyskleyTech.ImageProcessing.Image.Size(266, 200);
+            var siz = new MoyskleyTech.ImageProcessing.Image.Size(imageWidth * 4/9, imageHeight/3);
             iOri = new FixedSizeImage(siz);
             iActivated = new FixedSizeImage(siz);
             iActivation = new FixedSizeImage(siz);
@@ -122,7 +134,6 @@ namespace DRAL.UI
             menu.HeightRequest = 30;
             bx.Add(menu);
             bx.Add(bottom);
-
             gtkWin.KeyPressEvent += GtkWin_KeyPressEvent;
             gtkWin.Add(bx);
             //Show Everything
