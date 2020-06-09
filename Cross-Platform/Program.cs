@@ -24,10 +24,17 @@ namespace DRAL
                 verbose = true;
             Gtk.Application.Init();
 
-            RetagWindow window = new RetagWindow();
-           
+            NewTagWindow ntWindow = new NewTagWindow();
+            RetagWindow rtWindow = new RetagWindow();
+            DRALWindow window=null;
+            
             if (args.Contains("--no-window") || args.Contains("--cli"))
                 withWindow = false;
+            if (args.Contains("--new") || args.Contains("-n"))
+                window = ntWindow;
+            else if (args.Contains("--retag") || args.Contains("-r") || window==null)
+                window = rtWindow;
+
             if (withWindow)
                 window.Show();
             if (args.Contains("--fix") || args.Contains("-f") || args.Contains("--fix-dataset"))

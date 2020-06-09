@@ -13,12 +13,12 @@ using System.Threading.Tasks;
 
 namespace AttentionAndRetag.Model
 {
-    public class DisplayModel : INotifyPropertyChanged
+    public class DisplayModelNew : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
         public int TrainingFileCount => new DirectoryInfo("./data/ori/labels/").EnumerateFiles().Count();
-        RetagWindow win;
-        public DisplayModel(RetagWindow window)
+        NewTagWindow win;
+        public DisplayModelNew(NewTagWindow window)
         {
             win = window;
             EmitChanged(nameof(TrainingFileCount));

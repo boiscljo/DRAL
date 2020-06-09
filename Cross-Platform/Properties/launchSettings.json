@@ -2,7 +2,7 @@
   "profiles": {
     "Cross-Platform": {
       "commandName": "Project",
-      "commandLineArgs": "-v"
+      "commandLineArgs": "-v -n"
     }
   }
 }

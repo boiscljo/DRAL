@@ -22,14 +22,14 @@ using Rectangle = MoyskleyTech.ImageProcessing.Image.Rectangle;
 
 namespace DRAL.UI
 {
-    public partial class RetagWindow: DRALWindow
+    public partial class NewTagWindow: DRALWindow
     {
         AttentionHandler attentionHandler;
         ConfigurationManager manager;
         Retagger retag;
         AttentionMapAnaliser analyser;
         PointF last;
-        DisplayModel model;
+        DisplayModelNew model;
         const int windowSize = 100;
         DateTime lastUpdate;
         private double dispBeginX;
@@ -37,7 +37,7 @@ namespace DRAL.UI
         private double dispBeginY;
         private double dispEndY;
 
-        public RetagWindow()
+        public NewTagWindow()
         {
             Init();
             PngCodec.Register();
@@ -58,7 +58,7 @@ namespace DRAL.UI
             analyser.Init();
             attentionHandler.Init();
             retag.Init();
-            model = new DisplayModel(this);
+            model = new DisplayModelNew(this);
 
             last = new PointF(-windowSize, -windowSize);
         }
@@ -379,208 +379,7 @@ namespace DRAL.UI
                 Directory.CreateDirectory("./data/both/images");
                 Directory.CreateDirectory("./data/both/labels");
                 Directory.CreateDirectory("./data/map/images");
-
-                var originals_label = (from x in Directory.GetFiles("./data/ori/labels") select new FileInfo(x).Name).ToArray();
-                var finals_label = (from x in Directory.GetFiles("./data/imp/labels") select new FileInfo(x).Name).ToArray();
-                var bf = new BitmapFactory();
-                int missing_both=0;
-                int countFix = 0;
-                //Fix untagged finals
-                if (originals_label.Length != finals_label.Length)
-                {
-                    //await Task.Run(async() =>
-                    {
-                        async Task action_fix_label(string label_path)
-                        {
-                            try
-                            {
-                                var fi = new FileInfo(label_path);
-
-                                var img = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
-                                var label = manager.GetLabel(img);
-
-                                var ori_img = bf.Decode("./data/ori/images/" + img + ".jpg");
-                                var grayscale = bf.Decode("./data/map/images/" + img + ".jpg");
-                                countFix++;
-                                if (Program.verbose)
-                                    Console.WriteLine("Fixing missing labels for " + label_path);
-                                if (Program.withWindow)
-                                {
-                                    Application.Invoke((_, _1) =>
-                                    {
-                                        iOri.Image = pictureBox.Image = ori_img;
-                                        iActivation.Image = grayscale;
-                                    });
-                                }
-
-                                var task = retag.ImproveLabel(Program.withWindow ? iActivated : null, ori_img, grayscale.ConvertTo<byte>(), label);
-                                var newLabel = await task;
-                                if (Program.verbose)
-                                    Console.WriteLine("Saving labels to ./data/imp/labels/" + label_path);
-                                SaveLabel("./data/imp/labels/" + label_path, newLabel, ori_img.Width, ori_img.Height);
-                            }
-                            catch (Exception er)
-                            {
-                                Console.WriteLine("[ERROR]" + er.Message + er.StackTrace + "[/ERROR]");
-                            }
-                        };
-                        var src = originals_label.Except(finals_label);
-                        if (Program.withWindow)//Must run on UI thread
-                            foreach (var label_path in src)
-                                await action_fix_label(label_path);
-                        else
-                            Parallel.ForEach(src, (r) => action_fix_label(r).Wait());
-                    }//);
-                }
-
-                var originals = (from x in Directory.GetFiles("./data/ori/images") select new FileInfo(x).Name).ToArray();
-                var finals = (from x in Directory.GetFiles("./data/imp/images") select new FileInfo(x).Name).ToArray();
-                var maps = (from x in Directory.GetFiles("./data/map/images") select new FileInfo(x).Name).ToArray();
-
-
-                //fix missing maps
-                Parallel.ForEach(originals, (ori) =>
-                {
-                    if (!maps.Contains(ori))
-                    {
-                        //Map is missing
-
-                        var ori_img = bf.Decode("./data/ori/images/" + ori);
-                        var fin_img = bf.Decode("./data/imp/images/" + ori);
-                        var map = Image<byte>.Create(ori_img.Width, ori_img.Height);
-                        countFix++;
-
-                        if (Program.verbose)
-                            Console.WriteLine("Fixing missing maps for " + ori);
-
-                        for (var x = 0; x < ori_img.Width; x++)
-                        {
-                            for (var y = 0; y < ori_img.Height; y++)
-                            {
-                                var ori_px = ori_img[x, y];
-                                var end_px = fin_img[x, y];
-
-                                var min_a_r = 0;
-                                if (ori_px.R != 128) min_a_r = (end_px.R * 255 - 128 * 255) / (ori_px.R - 128);
-                                var min_a_g = 0;
-                                if (ori_px.G != 128) min_a_g = (end_px.G * 255 - 128 * 255) / (ori_px.G - 128);
-                                var min_a_b = 0;
-                                if (ori_px.B != 128) min_a_b = (end_px.B * 255 - 128 * 255) / (ori_px.B - 128);
-
-                                var nb_val_r = 255; if (ori_px.R != 128) nb_val_r = 255 / (Math.Abs(128 - ori_px.R));
-                                var nb_val_g = 255; if (ori_px.G != 128) nb_val_g = 255 / (Math.Abs(128 - ori_px.G));
-                                var nb_val_b = 255; if (ori_px.B != 128) nb_val_b = 255 / (Math.Abs(128 - ori_px.B));
-
-                                var vals_r = Enumerable.Range(min_a_r, nb_val_r);
-                                var vals_g = Enumerable.Range(min_a_g, nb_val_g);
-                                var vals_b = Enumerable.Range(min_a_b, nb_val_b);
-
-                                var possible_values = vals_r.Union(vals_g).Union(vals_b).ToArray();
-
-                                if (possible_values.Length == 0)
-                                    MessageBox.ShowError(gtkWin, "Impossible solution");
-                                map[x, y] = (byte)possible_values.FirstOrDefault();
-                            }
-                        }
-
-                        map.SaveJPG("./data/map/images/" + ori);
-
-                    }
-                });
-
-                void DeleteIfExists(string path)
-                {
-                    if (Program.verbose)
-                        Console.WriteLine("Deleting orphan file " + path);
-                    if (System.IO.File.Exists(path))
-                        System.IO.File.Delete(path);
-                }
-                void CopyIfNot(string path,string dest)
-                {
-                    if (!System.IO.File.Exists(dest))
-                    {
-                        if (Program.verbose)
-                            Console.WriteLine("Fixing missing file in both " + dest);
-                        missing_both++;
-                        System.IO.File.Copy(path, dest,true);
-                    }
-                }
-                //orphans
-                int count_orphans = 0;
-                originals_label = (from fi in (from x in Directory.GetFiles("./data/ori/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-                finals_label = (from fi in (from x in Directory.GetFiles("./data/imp/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-                originals = (from fi in (from x in Directory.GetFiles("./data/ori/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-                finals = (from fi in (from x in Directory.GetFiles("./data/imp/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-                maps = (from fi in (from x in Directory.GetFiles("./data/map/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-                //orphans in original
-                if (false && originals_label.Length != originals.Length)
-                {
-                    //orphans
-                    foreach (var label_without_image in originals_label.Except(originals))
-                    {
-                        count_orphans++;
-                        DeleteIfExists("./data/ori/labels/" + label_without_image + ".txt");
-                    }
-                    foreach (var image_without_label in originals.Except(originals_label))
-                    {
-                        count_orphans++;
-                        DeleteIfExists("./data/ori/images/" + image_without_label + ".jpg");
-                    }
-                }
-                //orphans in improved
-                if (false && finals_label.Length != finals.Length)
-                {
-                    //orphans
-                    foreach (var label_without_image in finals_label.Except(finals))
-                    {
-                        count_orphans++;
-                        DeleteIfExists("./data/imp/labels/" + label_without_image + ".txt");
-                    }
-                    foreach (var image_without_label in finals.Except(finals_label))
-                    {
-                        count_orphans++;
-                        DeleteIfExists("./data/imp/images/" + image_without_label + ".jpg");
-                    }
-                }
-                //originals do not have the same length as improved
-                if (false && originals.Length != finals.Length)
-                {
-                    foreach (var original_without_final in originals.Except(finals))
-                    {
-                        count_orphans++;
-                        DeleteIfExists("./data/ori/labels/" + original_without_final + ".txt");
-                        DeleteIfExists("./data/ori/images/" + original_without_final + ".jpg");
-                    }
-                    foreach (var final_without_original in finals.Except(originals))
-                    {
-                        count_orphans++;
-                        DeleteIfExists("./data/ori/labels/" + final_without_original + ".txt");
-                        DeleteIfExists("./data/ori/images/" + final_without_original + ".jpg");
-                    }
-                }
-                if (false && maps.Length != originals.Length)
-                {
-                    foreach (var map_without_ori in maps.Except(originals))
-                    {
-                        count_orphans++;
-                        DeleteIfExists("./data/map/images/" + map_without_ori + ".jpg");
-                    }
-                }
-
-                originals_label = (from fi in (from x in Directory.GetFiles("./data/ori/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-                finals_label = (from fi in (from x in Directory.GetFiles("./data/imp/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-                originals = (from fi in (from x in Directory.GetFiles("./data/ori/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-                finals = (from fi in (from x in Directory.GetFiles("./data/imp/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-
-                foreach (var label in originals_label) CopyIfNot("./data/ori/labels/" + label + ".txt", "./data/both/labels/" + label + "_o.txt");
-                foreach (var label in finals_label) CopyIfNot("./data/imp/labels/" + label + ".txt", "./data/both/labels/" + label + "_i.txt");
-                foreach (var label in originals) CopyIfNot("./data/ori/images/" + label + ".jpg", "./data/both/images/" + label + "_o.jpg");
-                foreach (var label in finals) CopyIfNot("./data/imp/images/" + label + ".jpg", "./data/both/images/" + label + "_i.jpg");
-
-                Application.Invoke((_, _1) =>
-                {
-                    MessageBox.Show(gtkWin, countFix + " errors has been fixed, " + count_orphans + " orphans file removed, "+missing_both+" files missing in both");
-                });
+               
                 model.HadChangedTraining();
                 model.EndRun();
             }
