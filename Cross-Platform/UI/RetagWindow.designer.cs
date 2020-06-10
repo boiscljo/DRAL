@@ -96,6 +96,8 @@ namespace DRAL.UI
 
             evt.AddEvents((int)Gdk.EventMask.AllEventsMask);
             evt.MotionNotifyEvent += Left_MotionNotifyEvent;
+            evt.ButtonPressEvent += Evt_ButtonPressEvent;
+            evt.ButtonReleaseEvent += Evt_ButtonReleaseEvent;
 
             right = new Box(Orientation.Vertical, 1);
             right.WidthRequest = 200;

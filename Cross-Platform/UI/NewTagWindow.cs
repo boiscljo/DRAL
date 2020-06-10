@@ -3,6 +3,7 @@ using AttentionAndRetag.Config;
 using AttentionAndRetag.Model;
 using AttentionAndRetag.Retag;
 using Cairo;
+using DRAL.Tag;
 using DRAL.UI;
 using Gtk;
 using ImageProcessing.JPEGCodec;
@@ -22,11 +23,11 @@ using Rectangle = MoyskleyTech.ImageProcessing.Image.Rectangle;
 
 namespace DRAL.UI
 {
-    public partial class NewTagWindow: DRALWindow
+    public partial class NewTagWindow : DRALWindow
     {
         AttentionHandler attentionHandler;
         ConfigurationManager manager;
-        Retagger retag;
+        Tagger tagger;
         AttentionMapAnaliser analyser;
         PointF last;
         DisplayModelNew model;
@@ -37,30 +38,31 @@ namespace DRAL.UI
         private double dispBeginY;
         private double dispEndY;
 
+        Dictionary<uint, bool> buttonsPressed = new Dictionary<uint, bool>();
+
         public NewTagWindow()
         {
+            CreateDirectories();
+
             Init();
             PngCodec.Register();
             JPEGCodec.Register();
-            Directory.CreateDirectory("./data");
-            Directory.CreateDirectory("./data/ori/images");
-            Directory.CreateDirectory("./data/ori/labels");
-            Directory.CreateDirectory("./data/imp/images");
-            Directory.CreateDirectory("./data/imp/labels");
-            Directory.CreateDirectory("./data/map/images");
 
-            manager = new ConfigurationManager();
-            attentionHandler = new AttentionHandler() { ConfigurationManager = manager };
-            retag = new Retagger() { ConfigurationManager = manager };
+            manager = new ConfigurationManager() { NeedLabel = false };
+            attentionHandler = new AttentionHandler() { ConfigurationManager = manager, AllowWithoutLabel = true };
+            tagger = new Tagger() { ConfigurationManager = manager };
             analyser = new AttentionMapAnaliser() { ConfigurationManager = manager };
 
             manager.Init();
             analyser.Init();
             attentionHandler.Init();
-            retag.Init();
+            tagger.Init();
             model = new DisplayModelNew(this);
 
             last = new PointF(-windowSize, -windowSize);
+            buttonsPressed[1] = false;
+            buttonsPressed[2] = false;
+            buttonsPressed[3] = false;
         }
         public override void Show()
         {
@@ -76,56 +78,36 @@ namespace DRAL.UI
             OpenImage();
         }
 
-        private void ButtonLoadLabels_Clicked(object sender, EventArgs e)
-        {
-            Gtk.FileChooserDialog fc =
-                new Gtk.FileChooserDialog("Load labels",
-            gtkWin,
-            Gtk.FileChooserAction.Open,
-            "Cancel", Gtk.ResponseType.Cancel,
-            "Open", Gtk.ResponseType.Accept);
-            fc.Filter = new FileFilter();
-            fc.Filter.AddPattern("*.json");
-
-            if (fc.Run() == (int)Gtk.ResponseType.Accept)
-            {
-                manager.LoadLabels(fc.Filename);
-                manager.SaveConfig();
-            }
-            //Destroy() to close the File Dialog
-            fc.Dispose();
-        }
-
         private async void GtkWin_KeyPressEvent(object o, KeyPressEventArgs args)
         {
             var e = args.Event.Key;
             //Console.WriteLine(e.ToString() + args.Event.State.ToString());
-            if ((e == Gdk.Key.r|| e == Gdk.Key.R) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
+            if ((e == Gdk.Key.r || e == Gdk.Key.R) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
             {
                 attentionHandler.Reset();
             }
-            if ((e == Gdk.Key.o|| e == Gdk.Key.O) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
+            if ((e == Gdk.Key.o || e == Gdk.Key.O) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
             {
                 OpenImage();
             }
-            if ((e == Gdk.Key.z|| e == Gdk.Key.Z) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
+            if ((e == Gdk.Key.z || e == Gdk.Key.Z) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
             {
                 Previous(true);
             }
-            if ((e == Gdk.Key.x|| e == Gdk.Key.X) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
+            if ((e == Gdk.Key.x || e == Gdk.Key.X) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
             {
                 Previous(false);
             }
-            if ((e == Gdk.Key.n|| e== Gdk.Key.s|| e == Gdk.Key.N || e == Gdk.Key.S) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
+            if ((e == Gdk.Key.n || e == Gdk.Key.s || e == Gdk.Key.N || e == Gdk.Key.S) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
             {
                 if (await GenerateAndSave())
                     Next();
             }
-            if ((e == Gdk.Key.y|| e == Gdk.Key.b|| e == Gdk.Key.Y|| e == Gdk.Key.B) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
+            if ((e == Gdk.Key.y || e == Gdk.Key.b || e == Gdk.Key.Y || e == Gdk.Key.B) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
             {
                 Next();
             }
-            if ((e == Gdk.Key.w|| e == Gdk.Key.W) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
+            if ((e == Gdk.Key.w || e == Gdk.Key.W) && args.Event.State.HasFlag(Gdk.ModifierType.ControlMask))
             {
                 NextUntilNotRecorded();
             }
@@ -141,6 +123,10 @@ namespace DRAL.UI
             "Open", Gtk.ResponseType.Accept);
             fc.Filter = new FileFilter();
             fc.Filter.AddPattern("*.jpg");
+            fc.Filter.AddPattern("*.png");
+            fc.Filter.AddPattern("*.bmp");
+
+            fc.LocalOnly = false;
 
             if (fc.Run() == (int)Gtk.ResponseType.Accept)
             {
@@ -159,10 +145,16 @@ namespace DRAL.UI
                 new JPEGCodec().Save<Pixel>(img, s);
             }
         }
-        private void SaveLabel(string v, IMAGE_LABEL_INFO label, double w, double h)
+        private Image<T> LoadFile_<T>(string p)
+            where T:unmanaged
         {
-            System.IO.File.WriteAllText(v, retag.GenerateFile(label, w, h));
+            BitmapFactory bf = new BitmapFactory();
+            using (var fs = System.IO.File.OpenRead(p))
+            {
+                return bf.Decode(fs).ConvertTo<T>();
+            }
         }
+       
         private async Task<bool> GenerateAndSave()
         {
             bool ret = false;
@@ -171,7 +163,6 @@ namespace DRAL.UI
             {
                 try
                 {
-                    
                     if (attentionHandler.IsSet())
                     {
                         DateTime beginPopup = DateTime.Now;
@@ -179,15 +170,7 @@ namespace DRAL.UI
                         Image<Pixel> applied = null;
                         var _name_ = attentionHandler.Filename;
                         await Task.Run(() => attentionHandler.GenerateGrayscaleAndApplied(out grayscale, out applied));
-                        var label = manager.GetLabel(attentionHandler.Filename);
-
-                        Directory.CreateDirectory("./data");
-                        Directory.CreateDirectory("./data/ori/images");
-                        Directory.CreateDirectory("./data/ori/labels");
-                        Directory.CreateDirectory("./data/imp/images");
-                        Directory.CreateDirectory("./data/imp/labels");
-                        Directory.CreateDirectory("./data/map/images");
-
+                       
                         PresentResult pr = new PresentResult();
 
                         pr.iActivated.Image = applied;
@@ -196,15 +179,20 @@ namespace DRAL.UI
 
                         if ((ret = await pr.ShowDialogAsync()))
                         {
+                            /*if (chkGenNow.Active)
+                            {
+                                var newLabel = await tagger.ImproveLabel(iActivated, attentionHandler.Image, grayscale, label);
+                                SaveLabel("./data/imp/labels/" + _name_ + ".txt", newLabel, attentionHandler.Image.Width, attentionHandler.Image.Height);
+                            }*/
+                            SaveFile_("./step1/img/ori/" + _name_ + ".jpg", attentionHandler.Image);
+                            SaveFile_("./step1/img/imp/" + _name_ + ".jpg", applied);
+                            SaveFile_("./step1/map/" + _name_ + ".jpg", grayscale.ConvertTo<Pixel>());
+
                             if (chkGenNow.Active)
                             {
-                                var newLabel = await retag.ImproveLabel(iActivated, attentionHandler.Image, grayscale, label);
-                                SaveLabel("./data/imp/labels/" + _name_ + ".txt", newLabel, attentionHandler.Image.Width, attentionHandler.Image.Height);
+                                await GenBox(_name_);
+                                await TagNow(_name_);
                             }
-                            SaveFile_("./data/ori/images/" + _name_ + ".jpg", attentionHandler.Image);
-                            SaveLabel("./data/ori/labels/" + _name_ + ".txt", label, attentionHandler.Image.Width, attentionHandler.Image.Height);
-                            SaveFile_("./data/imp/images/" + _name_ + ".jpg", applied);
-                            SaveFile_("./data/map/images/" + _name_ + ".jpg", grayscale.ConvertTo<Pixel>());
                             model.HadChangedTraining();
                         }
                         DateTime endPopup = DateTime.Now;
@@ -214,12 +202,46 @@ namespace DRAL.UI
                 }
                 catch (Exception e)
                 {
-                    MessageBox.ShowError(gtkWin, e.Message);
+                    MessageBox.ShowError(gtkWin, e.Message+e.StackTrace);
                 }
                 model.EndRun();
             }
             return ret;
         }
+
+        private async Task TagNow(string name_)
+        {
+            TagWindow tagWindow = new TagWindow(name_);
+            await tagWindow.ShowDialogAsync();
+        }
+
+        private async Task GenBox(string _name_)
+        {
+            var source = LoadFile_<Pixel>("./step1/img/ori/" + _name_ + ".jpg");
+            var grayscale =LoadFile_<byte>("./step1/map/" + _name_ + ".jpg");
+
+            if (Program.verbose)
+                Console.WriteLine("Generating box for {0}", _name_);
+            var boxes = await tagger.GenerateBoxes(Program.withWindow?iActivated:null, source, grayscale);
+
+            SaveBox(boxes, _name_);
+            MoveStep2(_name_);
+        }
+
+        private void MoveStep2(string _name_)
+        {
+            if (Program.verbose)
+                Console.WriteLine("Moving {0} fom step1 to step2",_name_);
+            System.IO.File.Move("./step1/img/ori/" + _name_ + ".jpg", "./step2/img/ori/" + _name_ + ".jpg");
+            System.IO.File.Move("./step1/img/imp/" + _name_ + ".jpg", "./step2/img/imp/" + _name_ + ".jpg");
+            System.IO.File.Move("./step1/map/" + _name_ + ".jpg", "./step2/map/" + _name_ + ".jpg");
+        }
+
+        private void SaveBox(List<RectangleF> boxes, string _name_)
+        {
+            System.IO.File.WriteAllText("./step2/box/" + _name_ + ".json", Newtonsoft.Json.JsonConvert.SerializeObject(boxes));
+        }
+
         private void Left_MotionNotifyEvent(object o, MotionNotifyEventArgs args)
         {
             var pos = new PointF(args.Event.X, args.Event.Y);
@@ -233,7 +255,7 @@ namespace DRAL.UI
                 var winSizeYImg = scaleY * windowSize;
 
                 var now = DateTime.Now;
-                attentionHandler.BuildActivationMap(last, new SizeF(winSizeXImg, winSizeYImg), now - lastUpdate, false);//For previous position
+                attentionHandler.BuildActivationMap(last, new SizeF(winSizeXImg, winSizeYImg), now - lastUpdate, buttonsPressed[3]);//For previous position
                 lastUpdate = now;
 
                 var posOnImage = pos;
@@ -277,12 +299,6 @@ namespace DRAL.UI
         {
             attentionHandler.Next();
 
-            var lbl = manager.GetLabel(attentionHandler.Filename);
-            while (lbl == null)
-            {
-                attentionHandler.Next();
-                lbl = manager.GetLabel(attentionHandler.Filename);
-            }
             LoadImageInformation(attentionHandler.Filename);
         }
         private void NextUntilNotRecorded()
@@ -290,13 +306,6 @@ namespace DRAL.UI
             while (ExistsInTraining())
             {
                 attentionHandler.FastNext();
-
-                var lbl = manager.GetLabel(attentionHandler.Filename);
-                while (lbl == null)
-                {
-                    attentionHandler.FastNext();
-                    lbl = manager.GetLabel(attentionHandler.Filename);
-                }
             }
             attentionHandler.LoadCurrent();
             LoadImageInformation(attentionHandler.Filename);
@@ -305,30 +314,29 @@ namespace DRAL.UI
         private bool ExistsInTraining()
         {
             var _name_ = attentionHandler.Filename;
-            var img_path = "./data/imp/images/" + _name_ + ".jpg";
-            return (System.IO.File.Exists(img_path));
+            var img_path = "./data/new_imp/images/" + _name_ + ".jpg";
+            var img_path2 = "./step1/img/ori/" + _name_ + ".jpg";
+            var img_path3 = "./step2/img/ori/" + _name_ + ".jpg";
+            return (System.IO.File.Exists(img_path))|| (System.IO.File.Exists(img_path2))|| (System.IO.File.Exists(img_path3));
         }
         private void LoadImageInformation(string FileName)
         {
             var _name_ = attentionHandler.Filename;
-            var lbl = manager.GetLabel(attentionHandler.Filename);
-            if (lbl == null)
-            {
-                MessageBox.Show(gtkWin, "Could not tag an image without label, choose another");
-            }
-            else
-            {
-                gtkWin.Title = lbl.name;
-                lastUpdate = DateTime.Now;
-                iOri.Image = (attentionHandler.Image);
-                pictureBox.Image = (attentionHandler.Image);
-            }
-            var img_path = "./data/imp/images/" + _name_ + ".jpg";
-            var exists = (System.IO.File.Exists(img_path));
-            if (exists)
+            gtkWin.Title = _name_;
+            lastUpdate = DateTime.Now;
+            iOri.Image = (attentionHandler.Image);
+            pictureBox.Image = (attentionHandler.Image);
+
+            var paths = new string[] {
+                 "./data/new_imp/images/" + _name_ + ".jpg",
+                 "./step1/img/ori/" + _name_ + ".jpg",
+                 "./step2/img/ori/" + _name_ + ".jpg"
+            };
+            var existingFile = paths.FirstOrDefault((X) => System.IO.File.Exists(X));
+            if (existingFile!=null)
             {
                 BitmapFactory bitmapFactory = new BitmapFactory();
-                using (var fs = System.IO.File.OpenRead(img_path))
+                using (var fs = System.IO.File.OpenRead(existingFile))
                     iActivation.Image = (bitmapFactory.Decode(fs));
             }
             else
@@ -369,22 +377,79 @@ namespace DRAL.UI
 
         public override async Task Fix()
         {
-            if(await model.RequestRun())
-            {  
-                Directory.CreateDirectory("./data");
-                Directory.CreateDirectory("./data/ori/images");
-                Directory.CreateDirectory("./data/ori/labels");
-                Directory.CreateDirectory("./data/imp/images");
-                Directory.CreateDirectory("./data/imp/labels");
-                Directory.CreateDirectory("./data/both/images");
-                Directory.CreateDirectory("./data/both/labels");
-                Directory.CreateDirectory("./data/map/images");
-               
+            if (await model.RequestRun())
+            {
+                CreateDirectories();
+
+                try 
+                {
+                    var step1 = System.IO.Directory.GetFiles("./step1/img/ori");
+                    async Task Dofile(string file)
+                    {
+                         var img = System.IO.Path.GetFileNameWithoutExtension(file);
+                         await GenBox(img);
+                    }
+
+                    if (Program.withWindow)//Must run on UI thread
+                        foreach (var file in step1)
+                            await Dofile(file);
+                    else
+                        Parallel.ForEach(step1, (r) => Dofile(r).Wait());
+
+                    var step2 = System.IO.Directory.GetFiles("./step2/img/ori");
+                    foreach (var file in step2)
+                    {
+                        var img = System.IO.Path.GetFileNameWithoutExtension(file);
+                        await TagNow(img);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine(e.Message + e.StackTrace);
+                }
+
                 model.HadChangedTraining();
                 model.EndRun();
             }
         }
 
+        private static void CreateDirectories()
+        {
+            Directory.CreateDirectory("./data");
+
+            //Step 1, only image and map
+            Directory.CreateDirectory("./step1");
+            Directory.CreateDirectory("./step1/img");
+            Directory.CreateDirectory("./step1/img/ori");
+            Directory.CreateDirectory("./step1/img/imp");
+            Directory.CreateDirectory("./step1/map");
+            Directory.CreateDirectory("./step1/box");
+
+            //Step 2, after k-means, should be moves from 1 to 2
+            Directory.CreateDirectory("./step2");
+            Directory.CreateDirectory("./step2/img");
+            Directory.CreateDirectory("./step2/img/ori");
+            Directory.CreateDirectory("./step2/img/imp");
+            Directory.CreateDirectory("./step2/map");
+            Directory.CreateDirectory("./step2/box");
+
+            //final output
+            Directory.CreateDirectory("./data/new_ori/labels");
+            Directory.CreateDirectory("./data/new_ori/images");
+
+            Directory.CreateDirectory("./data/new_imp/labels");
+            Directory.CreateDirectory("./data/new_imp/images");
+        }
+
+        private void Evt_ButtonReleaseEvent(object o, ButtonReleaseEventArgs args)
+        {
+            buttonsPressed[args.Event.Button] = false;
+        }
+
+        private void Evt_ButtonPressEvent(object o, ButtonPressEventArgs args)
+        {
+            buttonsPressed[args.Event.Button] = true;
+        }
         private void Da_Drawn(object o, DrawnArgs args)
         {
             if (attentionHandler.Image != null)

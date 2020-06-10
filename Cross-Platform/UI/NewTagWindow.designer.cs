@@ -60,10 +60,6 @@ namespace DRAL.UI
 
             Box bx = new Box(Orientation.Vertical, 1);
             Box menu = new Box(Orientation.Horizontal, 1);
-            Button buttonLoadLabels = new Button() { Label = "Load labels" };
-            buttonLoadLabels.Clicked += ButtonLoadLabels_Clicked;
-            menu.Add(buttonLoadLabels);
-            buttons.Add(buttonLoadLabels);
             Button buttonLoadImages = new Button() { Label = "Load Image" };
             buttonLoadImages.Clicked += ButtonLoadImages_Clicked;
             menu.Add(buttonLoadImages);
@@ -96,6 +92,8 @@ namespace DRAL.UI
 
             evt.AddEvents((int)Gdk.EventMask.AllEventsMask);
             evt.MotionNotifyEvent += Left_MotionNotifyEvent;
+            evt.ButtonPressEvent += Evt_ButtonPressEvent;
+            evt.ButtonReleaseEvent += Evt_ButtonReleaseEvent;
 
             right = new Box(Orientation.Vertical, 1);
             right.WidthRequest = 200;
@@ -140,7 +138,6 @@ namespace DRAL.UI
             gtkWin.DeleteEvent += delegate { Application.Quit(); };
         }
 
-     
 
         private void Black_Drawn(object o, DrawnArgs args)
         {

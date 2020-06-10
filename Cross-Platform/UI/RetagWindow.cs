@@ -37,6 +37,8 @@ namespace DRAL.UI
         private double dispBeginY;
         private double dispEndY;
 
+        Dictionary<uint, bool> buttonsPressed = new Dictionary<uint, bool>();
+
         public RetagWindow()
         {
             Init();
@@ -233,7 +235,7 @@ namespace DRAL.UI
                 var winSizeYImg = scaleY * windowSize;
 
                 var now = DateTime.Now;
-                attentionHandler.BuildActivationMap(last, new SizeF(winSizeXImg, winSizeYImg), now - lastUpdate, false);//For previous position
+                attentionHandler.BuildActivationMap(last, new SizeF(winSizeXImg, winSizeYImg), now - lastUpdate, buttonsPressed[3]);//For previous position
                 lastUpdate = now;
 
                 var posOnImage = pos;
@@ -585,7 +587,15 @@ namespace DRAL.UI
                 model.EndRun();
             }
         }
+        private void Evt_ButtonReleaseEvent(object o, ButtonReleaseEventArgs args)
+        {
+            buttonsPressed[args.Event.Button] = false;
+        }
 
+        private void Evt_ButtonPressEvent(object o, ButtonPressEventArgs args)
+        {
+            buttonsPressed[args.Event.Button] = true;
+        }
         private void Da_Drawn(object o, DrawnArgs args)
         {
             if (attentionHandler.Image != null)

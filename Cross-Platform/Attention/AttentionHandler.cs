@@ -24,18 +24,18 @@ namespace AttentionAndRetag.Attention
         {
 
         }
-    
+
         public void BuildActivationMap(PointF position, SizeF size, TimeSpan duration, bool shouldRemove)
         {
             if (attentionMap != null)
             {
 
                 ImageProxy<double> imageProxy = attentionMap?.Proxy(
-                    new Rectangle((int)(position.X-size.Width/2), (int)(position.Y-size.Height / 2),
+                    new Rectangle((int)(position.X - size.Width / 2), (int)(position.Y - size.Height / 2),
                     (int)size.Width, (int)size.Height));
 
                 var ts = duration;
-                
+
                 var removeFactor = shouldRemove ? -1 : 1;
                 imageProxy?.ApplyFilter((px, pt) =>
                 {
@@ -43,7 +43,7 @@ namespace AttentionAndRetag.Attention
                     var iy = (pt.Y / size.Height) * 2 - 1;
                     if (ix * ix + iy * iy > 1)//out of circle = original pixel
                         return px;
-                    var distance = Math.Pow((ix * ix + iy * iy),0.5);
+                    var distance = Math.Pow((ix * ix + iy * iy), 0.5);
 
                     //=2*(1- 2^(D1*A1+C1) / (2^(D1*A1+C1)+1))
                     var _base = 1.5d;
@@ -56,7 +56,7 @@ namespace AttentionAndRetag.Attention
             }
         }
 
-       
+
 
         public void Reset()
         {
@@ -70,40 +70,49 @@ namespace AttentionAndRetag.Attention
         private FileInfo[] files;
 
         public int ImageIndex { get; set; } = 0;
+        public bool AllowWithoutLabel { get; internal set; }
+
         internal Image<Pixel> OpenImage(string fileName, bool loadFolder)
         {
-            var file = new FileInfo(fileName);
-            var dir = file.Directory;
-
-            ConfigurationManager.LastOpenedDirectoryImage = dir.FullName;
-            var factory = new BitmapFactory();
-            var totFileName = fileName;
-            FileInfo fi = new FileInfo(totFileName);
-            Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
-
-            using (var s = System.IO.File.OpenRead(fileName))
-                img = factory.Decode(s);
-
-            attentionMap = new Image<double>(img.Width, img.Height);
-            attentionMap.ApplyFilter((px, pt) => 0);
-
-            if (loadFolder)
+            try
             {
-                files = dir.GetFiles();
-                if (Program.verbose)
-                    Console.WriteLine("files[0]={0}, file={1}, files.Length={2}", files[0], file,files.Length);
-                ImageIndex = -1;
-                for (var i = 0; i < files.Length; i++)
-                    if (files[i].FullName == file.FullName)
-                    {
-                        ImageIndex = i;
-                        break;
-                    }
-                if (Program.verbose)
-                    Console.WriteLine("Loading image {0}", ImageIndex);
-            }
+                var file = new FileInfo(fileName);
+                var dir = file.Directory;
 
-            return img;
+                ConfigurationManager.LastOpenedDirectoryImage = dir.FullName;
+                var factory = new BitmapFactory();
+                var totFileName = fileName;
+                FileInfo fi = new FileInfo(totFileName);
+                Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
+
+                using (var s = System.IO.File.OpenRead(fileName))
+                    img = factory.Decode(s);
+
+                attentionMap = new Image<double>(img.Width, img.Height);
+                attentionMap.ApplyFilter((px, pt) => 0);
+
+                if (loadFolder)
+                {
+                    files = dir.GetFiles();
+                    if (Program.verbose)
+                        Console.WriteLine("files[0]={0}, file={1}, files.Length={2}", files[0], file, files.Length);
+                    ImageIndex = -1;
+                    for (var i = 0; i < files.Length; i++)
+                        if (files[i].FullName == file.FullName)
+                        {
+                            ImageIndex = i;
+                            break;
+                        }
+                    if (Program.verbose)
+                        Console.WriteLine("Loading image {0}", ImageIndex);
+                }
+
+                return img;
+            }
+            catch
+            {
+                return new Image<Pixel>(1,1);
+            }
         }
         public string Next()
         {
@@ -141,8 +150,8 @@ namespace AttentionAndRetag.Attention
         public string Previous()
         {
             ImageIndex--;
-            if (ImageIndex <0)
-                ImageIndex = files.Length-1;
+            if (ImageIndex < 0)
+                ImageIndex = files.Length - 1;
             FileInfo fi = files[ImageIndex];
             Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
             var factory = new BitmapFactory();
@@ -175,7 +184,7 @@ namespace AttentionAndRetag.Attention
             });
         }
 
-      
+
 
         public void GenerateGrayscaleAndApplied(
           out Image<byte> grayscale,

@@ -16,7 +16,7 @@ namespace AttentionAndRetag.Config
         public string LastOpenedDirectoryLabel { get => cfg["lastOpenedDirectoryLabel"]; set => cfg["lastOpenedDirectoryLabel"] = value; }
         public string LastOpenedDirectoryImage { get => cfg["lastOpenedDirectoryImage"]; set => cfg["lastOpenedDirectoryImage"] = value; }
         public string LabelFile { get => cfg["labelFile"]; set => cfg["labelFile"] = value; }
-
+        public bool NeedLabel { get; set; } = true;
         public DirectoryInfo LabelDirectory { get; private set; } = new DirectoryInfo(label_dir);
         public DirectoryInfo ImgDirectory { get; private set; } = new DirectoryInfo(img_dir);
 
@@ -63,7 +63,7 @@ namespace AttentionAndRetag.Config
                     }
                 }
             }
-            if (LabelFile != null)
+            if (LabelFile != null && NeedLabel)
             {
                 LoadLabels(LabelFile);
             }
