@@ -303,11 +303,15 @@ namespace DRAL.UI
         }
         private void NextUntilNotRecorded()
         {
-            while (ExistsInTraining())
+            bool hasLoaded = false;
+            while (!hasLoaded)
             {
-                attentionHandler.FastNext();
+                while (ExistsInTraining())
+                {
+                    attentionHandler.FastNext();
+                }
+                hasLoaded=attentionHandler.LoadCurrent();
             }
-            attentionHandler.LoadCurrent();
             LoadImageInformation(attentionHandler.Filename);
         }
 
@@ -396,11 +400,14 @@ namespace DRAL.UI
                     else
                         Parallel.ForEach(step1, (r) => Dofile(r).Wait());
 
-                    var step2 = System.IO.Directory.GetFiles("./step2/img/ori");
-                    foreach (var file in step2)
+                    if (Program.withWindow)
                     {
-                        var img = System.IO.Path.GetFileNameWithoutExtension(file);
-                        await TagNow(img);
+                        var step2 = System.IO.Directory.GetFiles("./step2/img/ori");
+                        foreach (var file in step2)
+                        {
+                            var img = System.IO.Path.GetFileNameWithoutExtension(file);
+                            await TagNow(img);
+                        }
                     }
                 }
                 catch (Exception e)

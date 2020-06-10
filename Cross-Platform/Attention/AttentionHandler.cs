@@ -111,17 +111,22 @@ namespace AttentionAndRetag.Attention
             }
             catch
             {
-                return new Image<Pixel>(1,1);
+                return new Image<Pixel>(1, 1);
             }
         }
         public string Next()
         {
-            ImageIndex++;
-            if (ImageIndex > files.Length)
-                ImageIndex = 0;
-            FileInfo fi = files[ImageIndex];
-            Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
-            LoadCurrent();
+            FileInfo fi = null;
+            bool hasLoaded = false;
+            while (!hasLoaded)
+            {
+                ImageIndex++;
+                if (ImageIndex > files.Length)
+                    ImageIndex = 0;
+                fi = files[ImageIndex];
+                Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
+                hasLoaded = LoadCurrent();
+            }
             if (Program.verbose)
                 Console.WriteLine("Loading image {0}", ImageIndex);
             return fi.FullName;
@@ -137,15 +142,23 @@ namespace AttentionAndRetag.Attention
                 Console.WriteLine("Loading image {0}", ImageIndex);
             return fi.FullName;
         }
-        public void LoadCurrent()
+        public bool LoadCurrent()
         {
-            var factory = new BitmapFactory();
-            FileInfo fi = files[ImageIndex];
-            using (var s = System.IO.File.OpenRead(fi.FullName))
-                img = factory.Decode(s);
+            try
+            {
+                var factory = new BitmapFactory();
+                FileInfo fi = files[ImageIndex];
+                using (var s = System.IO.File.OpenRead(fi.FullName))
+                    img = factory.Decode(s);
 
-            attentionMap = new Image<double>(img.Width, img.Height);
-            attentionMap.ApplyFilter((px, pt) => 0);
+                attentionMap = new Image<double>(img.Width, img.Height);
+                attentionMap.ApplyFilter((px, pt) => 0);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
         public string Previous()
         {
