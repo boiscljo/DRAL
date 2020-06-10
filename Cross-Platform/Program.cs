@@ -17,7 +17,7 @@ namespace DRAL
             Console.WriteLine("DRAL V." + Assembly.GetEntryAssembly().GetName().Version);
             if (args.Contains("--help") || args.Contains("-h"))
             {
-                Console.WriteLine("./DRAL [ --help | -h ] [ --no-window | --cli ] [ --fix-dataset | --fix | -f ]\r\n\t --help | -h : Display this help\r\n\t --no-window | --cli : Run in command line mode\r\n\t --fix-dataset | --fix | -f Run the fix dataset command");
+                Console.WriteLine("./DRAL [ --help | -h ] [--new | -n | --retag | -r] [ --no-window | --cli ] [ --fix-dataset | --fix | -f ]\r\n\t --help | -h : Display this help\r\n\t --no-window | --cli : Run in command line mode\r\n\t --fix-dataset | --fix | -f Run the fix dataset command\r\n\t --new | -n Start in tagger mode\r\n\t --retag | -r Start in retagger mode");
                 return;
             }
             if (args.Contains("-v") || args.Contains("--verbose"))
