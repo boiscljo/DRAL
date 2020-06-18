@@ -16,7 +16,7 @@ namespace AttentionAndRetag.Model
     public class DisplayModelNew : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        public int TrainingFileCount => new DirectoryInfo("./data/ori/labels/").EnumerateFiles().Count();
+        public int TrainingFileCount => new DirectoryInfo("./data/new_ori/labels/").EnumerateFiles().Count();
         NewTagWindow win;
         public DisplayModelNew(NewTagWindow window)
         {

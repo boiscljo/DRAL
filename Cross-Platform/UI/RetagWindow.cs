@@ -27,7 +27,7 @@ namespace DRAL.UI
         AttentionHandler attentionHandler;
         ConfigurationManager manager;
         Retagger retag;
-        AttentionMapAnaliser analyser;
+        AttentionMapAnalizer analyser;
         PointF last;
         DisplayModel model;
         const int windowSize = 100;
@@ -44,17 +44,12 @@ namespace DRAL.UI
             Init();
             PngCodec.Register();
             JPEGCodec.Register();
-            Directory.CreateDirectory("./data");
-            Directory.CreateDirectory("./data/ori/images");
-            Directory.CreateDirectory("./data/ori/labels");
-            Directory.CreateDirectory("./data/imp/images");
-            Directory.CreateDirectory("./data/imp/labels");
-            Directory.CreateDirectory("./data/map/images");
+            CreateDirectories();
 
             manager = new ConfigurationManager();
             attentionHandler = new AttentionHandler() { ConfigurationManager = manager };
             retag = new Retagger() { ConfigurationManager = manager };
-            analyser = new AttentionMapAnaliser() { ConfigurationManager = manager };
+            analyser = new AttentionMapAnalizer() { ConfigurationManager = manager };
 
             manager.Init();
             analyser.Init();
@@ -64,6 +59,17 @@ namespace DRAL.UI
 
             last = new PointF(-windowSize, -windowSize);
         }
+
+        private static void CreateDirectories()
+        {
+            Directory.CreateDirectory("./data");
+            Directory.CreateDirectory("./data/ori/images");
+            Directory.CreateDirectory("./data/ori/labels");
+            Directory.CreateDirectory("./data/imp/images");
+            Directory.CreateDirectory("./data/imp/labels");
+            Directory.CreateDirectory("./data/map/images");
+        }
+
         public override void Show()
         {
             gtkWin.ShowAll();
@@ -183,12 +189,7 @@ namespace DRAL.UI
                         await Task.Run(() => attentionHandler.GenerateGrayscaleAndApplied(out grayscale, out applied));
                         var label = manager.GetLabel(attentionHandler.Filename);
 
-                        Directory.CreateDirectory("./data");
-                        Directory.CreateDirectory("./data/ori/images");
-                        Directory.CreateDirectory("./data/ori/labels");
-                        Directory.CreateDirectory("./data/imp/images");
-                        Directory.CreateDirectory("./data/imp/labels");
-                        Directory.CreateDirectory("./data/map/images");
+                     
 
                         PresentResult pr = new PresentResult();
 

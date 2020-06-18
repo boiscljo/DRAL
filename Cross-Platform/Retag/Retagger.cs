@@ -39,7 +39,7 @@ namespace AttentionAndRetag.Retag
 
             List<RectangleF> proposedBoxes = new List<RectangleF>();
 
-            AttentionMapAnaliser c = new AttentionMapAnaliser();
+            AttentionMapAnalizer c = new AttentionMapAnalizer();
             //Foreach config, keep proposed boxes
             foreach (var cfg in new CFG[] {
                     new CFG(){ p=1, wz=3},

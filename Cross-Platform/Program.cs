@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using DRAL.UI;
@@ -12,6 +13,8 @@ namespace DRAL
         internal static bool withWindow = true;
         internal static bool autoClose = false;
         internal static bool verbose = false;
+        internal static int skip = 0;
+        internal static int take = int.MaxValue;
         static void Main(string[] args)
         {
             Console.WriteLine("DRAL V." + Assembly.GetEntryAssembly().GetName().Version);
@@ -34,7 +37,16 @@ namespace DRAL
                 window = ntWindow;
             else if (args.Contains("--retag") || args.Contains("-r") || window==null)
                 window = rtWindow;
-
+            if (args.Contains("--skip"))
+            {
+                var skipIdx = Array.IndexOf(args, "--skip");
+                skip = int.Parse(args[skipIdx + 1]);
+            }
+            if (args.Contains("--take"))
+            {
+                var takeIdx = Array.IndexOf(args, "--take");
+                take = int.Parse(args[takeIdx + 1]);
+            }
             if (withWindow)
                 window.Show();
             if (args.Contains("--fix") || args.Contains("-f") || args.Contains("--fix-dataset"))

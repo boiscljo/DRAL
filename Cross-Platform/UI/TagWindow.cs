@@ -37,6 +37,7 @@ namespace DRAL.UI
         Image<BGRA> img_bgra;
         Size originalImageSize;
         private ImageSurface ims;
+        private List<RectangleF> boxes;
         private TaskCompletionSource<bool> result;
         string image;
         public TagWindow(string image)
@@ -52,7 +53,7 @@ namespace DRAL.UI
             img = img.Resize(imgBox.WidthRequest, imgBox.HeightRequest, ScalingMode.AverageInterpolate);
             img_bgra = img.ConvertBufferTo<BGRA>();
             ims = new ImageSurface(img_bgra.DataPointer, Format.Argb32, img.Width, img.Height, img.Width * 4);
-
+            boxes = Newtonsoft.Json.JsonConvert.DeserializeObject<List<RectangleF>>(System.IO.File.ReadAllText("./step2/box/" + image + ".json"));
             buttonsPressed[1] = false;
             buttonsPressed[2] = false;
             buttonsPressed[3] = false;
@@ -71,15 +72,15 @@ namespace DRAL.UI
         {
             result.TrySetResult(true);
 
-            //MoveDataset();
+            MoveDataset();
             gtkWin.Close();
         }
         private void SaveLabel(string v)
         {
-            System.IO.File.WriteAllText(v, GenerateFile(label, img.Width, img.Height));
+            System.IO.File.WriteAllText(v, GenerateFile(img.Width, img.Height));
         }
 
-        private string GenerateFile(IMAGE_LABEL_INFO label, double w, double h)
+        private string GenerateFile(double w, double h)
         {
             /*  case "traffic sign": return 0;
                 case "traffic light": return 0;
@@ -91,9 +92,9 @@ namespace DRAL.UI
                 case "truck": return 1;
                 case "bike": return 2;
                 case "train": return 1;*/
-            var newLabel = label.Clone();
-            newLabel.Resize(w, h, originalImageSize.Width, originalImageSize.Height);
-            var possibleBox = newLabel.labels.Where((x) => x.box2d != null).ToList();
+            //var newLabel = label.Clone();
+            //newLabel.Resize(w, h, originalImageSize.Width, originalImageSize.Height);
+            var possibleBox = label.labels.Where((x) => x.box2d != null).ToList();
             var possibleLines = possibleBox.Select((x) =>
             {
                 return x.category + " " + TS(x.box2d.x1 / w) + " " + TS(x.box2d.y1 / h) + " " + TS((x.box2d.x2 - x.box2d.x1) / w) + " " + TS((x.box2d.y2 - x.box2d.y1) / h);
@@ -158,9 +159,13 @@ namespace DRAL.UI
 
         private void MoveDataset()
         {
-            System.IO.File.Move("./step2/img/ori/" + image + ".jpg", "./data/new_ori/images/" + image + ".jpg");
-            System.IO.File.Move("./step2/img/imp/" + image + ".jpg", "./data/new_imp/images/" + image + ".jpg");
-            System.IO.File.Move("./step2/map/" + image + ".jpg", "./data/map/images/" + image + ".jpg");
+            System.IO.File.Move("./step2/img/ori/" + image + ".jpg", "./data/new_ori/images/" + image + ".jpg",true);
+            System.IO.File.Move("./step2/img/imp/" + image + ".jpg", "./data/new_imp/images/" + image + ".jpg", true);
+            System.IO.File.Move("./step2/map/" + image + ".jpg", "./data/map/images/" + image + ".jpg", true);
+            AttentionMapAnalizer c = new AttentionMapAnalizer();
+            label.Resize(img.Width, img.Height, originalImageSize.Width, originalImageSize.Height);
+            c.AdaptLabel(boxes, label);
+
             SaveLabel("./data/new_ori/labels/" + image + ".txt");
             SaveLabel("./data/new_imp/labels/" + image + ".txt");
         }
@@ -230,7 +235,7 @@ namespace DRAL.UI
             buttonsPressed[args.Event.Button] = false;
             if (args.Event.Button == 1)
             {
-                current.box2d.Fix();
+                current.box2d.Fix(imgBox.WidthRequest,imgBox.HeightRequest);
                 label.labels.Add(current);
                 last = current;
                 current = null;
@@ -254,7 +259,7 @@ namespace DRAL.UI
         private void ImgBox_Drawn(object o, DrawnArgs args)
         {
             Color activeRect = new Color(255, 0, 0);
-            Color setted = new Color(0, 255, 0);
+            Color setted = new Color(246, 255, 2);
 
             var ctx = args.Cr;
             ctx.SetSource(ims);
@@ -274,6 +279,7 @@ namespace DRAL.UI
             {
                 ctx.Rectangle(lbl.box2d.x1, lbl.box2d.y1, lbl.box2d.width, lbl.box2d.height);
                 ctx.MoveTo(lbl.box2d.x1, lbl.box2d.y1);
+                ctx.SetFontSize(24);
                 ctx.TextPath(lbl.category);
                 ctx.Stroke();
 

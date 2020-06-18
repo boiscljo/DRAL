@@ -121,7 +121,7 @@ namespace AttentionAndRetag.Attention
             while (!hasLoaded)
             {
                 ImageIndex++;
-                if (ImageIndex > files.Length)
+                if (ImageIndex >= files.Length)
                     ImageIndex = 0;
                 fi = files[ImageIndex];
                 Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
@@ -134,7 +134,7 @@ namespace AttentionAndRetag.Attention
         public string FastNext()
         {
             ImageIndex++;
-            if (ImageIndex > files.Length)
+            if (ImageIndex >= files.Length)
                 ImageIndex = 0;
             FileInfo fi = files[ImageIndex];
             Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);

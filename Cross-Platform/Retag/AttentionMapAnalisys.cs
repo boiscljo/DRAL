@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace AttentionAndRetag.Retag
 {
-    public class AttentionMapAnaliser
+    public class AttentionMapAnalizer
     {
         public ConfigurationManager ConfigurationManager { get; set; }
 
@@ -95,7 +95,7 @@ namespace AttentionAndRetag.Retag
             cls.x2 = matchedBox.Right;
             cls.y2 = matchedBox.Bottom;
         }
-        public void AdaptLabel(List<RectangleF> proposedBoxes, IMAGE_LABEL_INFO labels, double T1, double T2, double maxShrink)
+        public void AdaptLabel(List<RectangleF> proposedBoxes, IMAGE_LABEL_INFO labels, double T1=0.9, double T2=0.9, double maxShrink=0.25)
         {
             foreach (var cls in labels.labels)//foreach label
             {

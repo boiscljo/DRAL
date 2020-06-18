@@ -28,7 +28,7 @@ namespace DRAL.UI
         AttentionHandler attentionHandler;
         ConfigurationManager manager;
         Tagger tagger;
-        AttentionMapAnaliser analyser;
+        AttentionMapAnalizer analyser;
         PointF last;
         DisplayModelNew model;
         const int windowSize = 100;
@@ -51,7 +51,7 @@ namespace DRAL.UI
             manager = new ConfigurationManager() { NeedLabel = false };
             attentionHandler = new AttentionHandler() { ConfigurationManager = manager, AllowWithoutLabel = true };
             tagger = new Tagger() { ConfigurationManager = manager };
-            analyser = new AttentionMapAnaliser() { ConfigurationManager = manager };
+            analyser = new AttentionMapAnalizer() { ConfigurationManager = manager };
 
             manager.Init();
             analyser.Init();
@@ -191,7 +191,7 @@ namespace DRAL.UI
                             if (chkGenNow.Active)
                             {
                                 await GenBox(_name_);
-                                await TagNow(_name_);
+                                ret=await TagNow(_name_);
                             }
                             model.HadChangedTraining();
                         }
@@ -209,10 +209,10 @@ namespace DRAL.UI
             return ret;
         }
 
-        private async Task TagNow(string name_)
+        private async Task<bool> TagNow(string name_)
         {
             TagWindow tagWindow = new TagWindow(name_);
-            await tagWindow.ShowDialogAsync();
+            return await tagWindow.ShowDialogAsync();
         }
 
         private async Task GenBox(string _name_)
@@ -232,9 +232,9 @@ namespace DRAL.UI
         {
             if (Program.verbose)
                 Console.WriteLine("Moving {0} fom step1 to step2",_name_);
-            System.IO.File.Move("./step1/img/ori/" + _name_ + ".jpg", "./step2/img/ori/" + _name_ + ".jpg");
-            System.IO.File.Move("./step1/img/imp/" + _name_ + ".jpg", "./step2/img/imp/" + _name_ + ".jpg");
-            System.IO.File.Move("./step1/map/" + _name_ + ".jpg", "./step2/map/" + _name_ + ".jpg");
+            System.IO.File.Move("./step1/img/ori/" + _name_ + ".jpg", "./step2/img/ori/" + _name_ + ".jpg",true);
+            System.IO.File.Move("./step1/img/imp/" + _name_ + ".jpg", "./step2/img/imp/" + _name_ + ".jpg", true);
+            System.IO.File.Move("./step1/map/" + _name_ + ".jpg", "./step2/map/" + _name_ + ".jpg", true);
         }
 
         private void SaveBox(List<RectangleF> boxes, string _name_)
@@ -306,11 +306,11 @@ namespace DRAL.UI
             bool hasLoaded = false;
             while (!hasLoaded)
             {
-                while (ExistsInTraining())
+                do
                 {
                     attentionHandler.FastNext();
-                }
-                hasLoaded=attentionHandler.LoadCurrent();
+                } while (ExistsInTraining());
+                hasLoaded =attentionHandler.LoadCurrent();
             }
             LoadImageInformation(attentionHandler.Filename);
         }
@@ -333,8 +333,8 @@ namespace DRAL.UI
 
             var paths = new string[] {
                  "./data/new_imp/images/" + _name_ + ".jpg",
-                 "./step1/img/ori/" + _name_ + ".jpg",
-                 "./step2/img/ori/" + _name_ + ".jpg"
+                 "./step1/img/imp/" + _name_ + ".jpg",
+                 "./step2/img/imp/" + _name_ + ".jpg"
             };
             var existingFile = paths.FirstOrDefault((X) => System.IO.File.Exists(X));
             if (existingFile!=null)
@@ -403,7 +403,7 @@ namespace DRAL.UI
                     if (Program.withWindow)
                     {
                         var step2 = System.IO.Directory.GetFiles("./step2/img/ori");
-                        foreach (var file in step2)
+                        foreach (var file in step2.OrderBy((x)=>x).Skip(Program.skip).Take(Program.take))
                         {
                             var img = System.IO.Path.GetFileNameWithoutExtension(file);
                             await TagNow(img);
