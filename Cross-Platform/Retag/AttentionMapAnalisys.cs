@@ -12,7 +12,7 @@ namespace AttentionAndRetag.Retag
     {
         public ConfigurationManager ConfigurationManager { get; set; }
 
-        public List<Cluster<Point3>> SeparateImage(Image<Pixel> image, int k, int maxStep)
+        public List<Cluster<Point3>> SeparateImage(Image<Pixel> image)
         {
             Image<double> img = image.ConvertUsing<double>((px) => px.R);
 
@@ -169,16 +169,16 @@ namespace AttentionAndRetag.Retag
         {
             Kmeans<Point3>.GetDistance = StandardFunctions.Adapt<IVectorizable, IVectorizable, Point3, Point3, double, double>(
             StandardFunctions.MinkowskiDistance(p, new double[] { 1, 1, wz }));
-            var clusters = await Task.Run(() => SeparateImage(image, 3, 1000));
+            var clusters = await Task.Run(() => SeparateImage(image));
             clusters = SplitNonTouching(clusters);
             //clusters = MergeBox(clusters);
 
             var colors = (from x in clusters select StandardFunctions.RandomColor()).ToList();
             var clustersWithColor = clusters.Zip(colors);
-            foreach (var clusterC in clustersWithColor)
+            foreach (var (First, Second) in clustersWithColor)
             {
-                var cluster = clusterC.First;
-                var color = clusterC.Second;
+                var cluster = First;
+                var color = Second;
 
                 foreach (var pixel in cluster.Data)
                 {
@@ -187,11 +187,8 @@ namespace AttentionAndRetag.Retag
                 }
             }
             graphics?.DrawImage(image, 0, 0);
-            foreach (var clusterC in clustersWithColor)
+            foreach (var (cluster, color) in clustersWithColor)
             {
-                var cluster = clusterC.First;
-                var color = clusterC.Second;
-
                 var box = ToBox(cluster.Data);
                 if (box.IsValid)
                     graphics?.DrawRectangle(color, box.Location.X, box.Location.Y, box.Size.X, box.Size.Y, 5);
@@ -261,9 +258,9 @@ namespace AttentionAndRetag.Retag
         }
         public static bool AreClusterTouching(Cluster<Point3> a, Cluster<Point3> b, Rectangle3 b1)//b is larger
         {
-            MoyskleyTech.ImageProcessing.Image.Point ToPt(Point3 pt)
+            static Point ToPt(Point3 pt)
             {
-                return new MoyskleyTech.ImageProcessing.Image.Point((int)pt.X, (int)pt.Y);
+                return new Point((int)pt.X, (int)pt.Y);
             }
             IEnumerable<Point> pt1 = a.Data.Select(ToPt).ToArray();
             var end = b1.End;

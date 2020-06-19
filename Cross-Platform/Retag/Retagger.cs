@@ -70,19 +70,6 @@ namespace AttentionAndRetag.Retag
                 });
             return label;
         }
-        public string GenerateFile(IMAGE_LABEL_INFO label, double w, double h)
-        {
-            var possibleBox = label.labels.Where((x) => x.box2d != null && ConfigurationManager.IsKnownCategory(x.category)).ToList();
-            var possibleLines = possibleBox.Select((x) =>
-            {
-                return ConfigurationManager.GETKnownCategoryID(x.category) + " " + TS(x.box2d.x1 / w) + " " + TS(x.box2d.y1 / h) + " " + TS((x.box2d.x2 - x.box2d.x1) / w) + " " + TS((x.box2d.y2 - x.box2d.y1) / h);
-            });
-            return string.Join("\r\n", possibleLines);
-        }
-        private string TS(double v)
-        {
-            return v.ToString(new CultureInfo("en-US"));
-        }
 
         public void Init()
         {

@@ -18,11 +18,6 @@ namespace DRAL.Tag
         {
         }
 
-        internal string GenerateFile(IMAGE_LABEL_INFO label, double w, double h)
-        {
-            return string.Empty;
-        }
-
         internal async Task<List<RectangleF>> GenerateBoxes(FixedSizeImage iActivated, Image<Pixel> img, Image<byte> gray)
         {
             var ctx = img.Clone();

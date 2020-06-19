@@ -28,18 +28,15 @@ namespace DRAL.UI
     public partial class TagWindow : DRALWindow
     {
         PointF clickBegin;
-        const int windowSize = 100;
-
-        Dictionary<uint, bool> buttonsPressed = new Dictionary<uint, bool>();
-        IMAGE_LABEL_INFO label = new IMAGE_LABEL_INFO();
+        readonly Dictionary<uint, bool> buttonsPressed = new Dictionary<uint, bool>();
+        readonly IMAGE_LABEL_INFO label = new IMAGE_LABEL_INFO();
         LABEL current, last;
-        Image<Pixel> img;
-        Image<BGRA> img_bgra;
-        Size originalImageSize;
-        private ImageSurface ims;
-        private List<RectangleF> boxes;
+        readonly Image<Pixel> img;
+        readonly Image<BGRA> img_bgra;
+        private readonly ImageSurface ims;
+        private readonly List<RectangleF> boxes;
         private TaskCompletionSource<bool> result;
-        string image;
+        readonly string image;
         public TagWindow(string image)
         {
             this.image = image;
@@ -48,8 +45,7 @@ namespace DRAL.UI
             label.name = image;
             label.labels = new List<LABEL>();
 
-            img = LoadFile_<Pixel>("./step2/img/imp/" + image + ".jpg");
-            originalImageSize = img.Size;
+            img = Program.LoadFile_<Pixel>("./step2/img/imp/" + image + ".jpg");
             img = img.Resize(imgBox.WidthRequest, imgBox.HeightRequest, ScalingMode.AverageInterpolate);
             img_bgra = img.ConvertBufferTo<BGRA>();
             ims = new ImageSurface(img_bgra.DataPointer, Format.Argb32, img.Width, img.Height, img.Width * 4);
@@ -57,7 +53,15 @@ namespace DRAL.UI
             buttonsPressed[1] = false;
             buttonsPressed[2] = false;
             buttonsPressed[3] = false;
+
+            gtkWin.DeleteEvent += GtkWin_DeleteEvent1;
         }
+
+        private void GtkWin_DeleteEvent1(object o, DeleteEventArgs args)
+        {
+            img.Dispose();
+        }
+
         public override void Show()
         {
             gtkWin.ShowAll();
@@ -77,35 +81,9 @@ namespace DRAL.UI
         }
         private void SaveLabel(string v)
         {
-            System.IO.File.WriteAllText(v, GenerateFile(img.Width, img.Height));
+            System.IO.File.WriteAllText(v, label.GenerateFile(img.Width, img.Height));
         }
 
-        private string GenerateFile(double w, double h)
-        {
-            /*  case "traffic sign": return 0;
-                case "traffic light": return 0;
-                case "car": return 1;
-                case "rider": return 2;
-                case "motor": return 1;
-                case "person": return 3;
-                case "bus": return 1;
-                case "truck": return 1;
-                case "bike": return 2;
-                case "train": return 1;*/
-            //var newLabel = label.Clone();
-            //newLabel.Resize(w, h, originalImageSize.Width, originalImageSize.Height);
-            var possibleBox = label.labels.Where((x) => x.box2d != null).ToList();
-            var possibleLines = possibleBox.Select((x) =>
-            {
-                return x.category + " " + TS(x.box2d.x1 / w) + " " + TS(x.box2d.y1 / h) + " " + TS((x.box2d.x2 - x.box2d.x1) / w) + " " + TS((x.box2d.y2 - x.box2d.y1) / h);
-            });
-            return string.Join("\r\n", possibleLines);
-        }
-
-        private string TS(double v)
-        {
-            return v.ToString(new CultureInfo("en-US"));
-        }
         bool editingLabel = false;
         private void GtkWin_KeyPressEvent(object o, KeyPressEventArgs args)
         {
@@ -146,16 +124,6 @@ namespace DRAL.UI
             }
         }
 
-        private Image<T> LoadFile_<T>(string p)
-            where T : unmanaged
-        {
-            BitmapFactory bf = new BitmapFactory();
-            using (var fs = System.IO.File.OpenRead(p))
-            {
-                return bf.Decode(fs).ConvertTo<T>();
-            }
-        }
-
 
         private void MoveDataset()
         {
@@ -163,16 +131,11 @@ namespace DRAL.UI
             System.IO.File.Move("./step2/img/imp/" + image + ".jpg", "./data/new_imp/images/" + image + ".jpg", true);
             System.IO.File.Move("./step2/map/" + image + ".jpg", "./data/map/images/" + image + ".jpg", true);
             AttentionMapAnalizer c = new AttentionMapAnalizer();
-            label.Resize(img.Width, img.Height, originalImageSize.Width, originalImageSize.Height);
+            label.Resize(img.Width, img.Height,imgBox.WidthRequest,imgBox.HeightRequest);
             c.AdaptLabel(boxes, label);
 
             SaveLabel("./data/new_ori/labels/" + image + ".txt");
             SaveLabel("./data/new_imp/labels/" + image + ".txt");
-        }
-
-        private void SaveBox(List<RectangleF> boxes, string _name_)
-        {
-            System.IO.File.WriteAllText("./step1/box/" + _name_ + ".json", Newtonsoft.Json.JsonConvert.SerializeObject(boxes));
         }
 
         private void ImgBox_MotionNotifyEvent(object o, MotionNotifyEventArgs args)
@@ -182,14 +145,6 @@ namespace DRAL.UI
                 current.box2d.SetEnd(pos);
             imgBox.QueueDraw();
         }
-
-
-        private void DeleteIfExists(string v)
-        {
-            if (System.IO.File.Exists(v))
-                System.IO.File.Delete(v);
-        }
-
 
         private void BtnCancel_Clicked(object sender, EventArgs e)
         {
@@ -249,8 +204,10 @@ namespace DRAL.UI
             if (args.Event.Button == 1)
             {
                 clickBegin = new PointF(args.Event.X, args.Event.Y);
-                current = new LABEL();
-                current.category = "???";
+                current = new LABEL
+                {
+                    category = "???"
+                };
                 current.box2d.SetLocation(clickBegin);
                 imgBox.QueueDraw();
             }
@@ -282,7 +239,6 @@ namespace DRAL.UI
                 ctx.SetFontSize(24);
                 ctx.TextPath(lbl.category);
                 ctx.Stroke();
-
             }
         }
     }

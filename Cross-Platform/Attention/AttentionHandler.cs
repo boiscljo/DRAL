@@ -16,7 +16,7 @@ namespace AttentionAndRetag.Attention
         public ConfigurationManager ConfigurationManager { get; set; }
         public double WindowSize { get; set; } = 100;
 
-        double minSecond = 0.1;
+        const double MIN_SECOND = 0.1;
         Image<double> attentionMap;
         Image<Pixel> img;
 
@@ -80,14 +80,13 @@ namespace AttentionAndRetag.Attention
                 var dir = file.Directory;
 
                 ConfigurationManager.LastOpenedDirectoryImage = dir.FullName;
-                var factory = new BitmapFactory();
+                
                 var totFileName = fileName;
                 FileInfo fi = new FileInfo(totFileName);
                 Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
 
-                using (var s = System.IO.File.OpenRead(fileName))
-                    img = factory.Decode(s);
-
+                img = Program.LoadFile_<Pixel>(fileName);
+              
                 attentionMap = new Image<double>(img.Width, img.Height);
                 attentionMap.ApplyFilter((px, pt) => 0);
 
@@ -146,11 +145,10 @@ namespace AttentionAndRetag.Attention
         {
             try
             {
-                var factory = new BitmapFactory();
+                
                 FileInfo fi = files[ImageIndex];
-                using (var s = System.IO.File.OpenRead(fi.FullName))
-                    img = factory.Decode(s);
-
+                img = Program.LoadFile_<Pixel>(fi.FullName);
+             
                 attentionMap = new Image<double>(img.Width, img.Height);
                 attentionMap.ApplyFilter((px, pt) => 0);
                 return true;
@@ -167,10 +165,8 @@ namespace AttentionAndRetag.Attention
                 ImageIndex = files.Length - 1;
             FileInfo fi = files[ImageIndex];
             Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
-            var factory = new BitmapFactory();
-            using (var s = System.IO.File.OpenRead(fi.FullName))
-                img = factory.Decode(s);
-
+            img = Program.LoadFile_<Pixel>(fi.FullName);
+           
             attentionMap = new Image<double>(img.Width, img.Height);
             attentionMap.ApplyFilter((px, pt) => 0);
             if (Program.verbose)
@@ -183,7 +179,7 @@ namespace AttentionAndRetag.Attention
             var max = Math.Min(5000, (from x in Enumerable.Range(0, size) select attentionMap[x]).Max());
 
             var normalized = attentionMap.Clone();
-            normalized.ApplyFilter((px, pt) => Math.Max(0, px - minSecond * 1000));
+            normalized.ApplyFilter((px, pt) => Math.Max(0, px - MIN_SECOND * 1000));
             normalized.ApplyFilter((px, pt) => Math.Min(px, max) / max);
             Image<byte> hray = grayscale = normalized.ConvertUsing<byte>((dbl) => (byte)(dbl * 255));
             normalized.Dispose();

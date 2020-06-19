@@ -21,5 +21,13 @@ namespace DRAL.UI
             ms.Position = 0;
             return new Pixbuf(ms);
         }
+        public static Pixbuf ToPixbuf<T>(ImageProxy<T> input)
+            where T : unmanaged
+        {
+            MemoryStream ms = new MemoryStream();
+            input.Save(ms);
+            ms.Position = 0;
+            return new Pixbuf(ms);
+        }
     }
 }

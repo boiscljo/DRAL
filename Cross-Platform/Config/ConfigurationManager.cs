@@ -1,4 +1,5 @@
 ﻿using AttentionAndRetag.Retag;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,7 +21,7 @@ namespace AttentionAndRetag.Config
         public DirectoryInfo LabelDirectory { get; private set; } = new DirectoryInfo(label_dir);
         public DirectoryInfo ImgDirectory { get; private set; } = new DirectoryInfo(img_dir);
 
-        Dictionary<string, string> cfg = new Dictionary<string, string>() { { "lastOpenedDirectoryLabel", null }, { "lastOpenedDirectoryImage", null }, { "labelFile", null } };
+        readonly Dictionary<string, string> cfg = new Dictionary<string, string>() { { "lastOpenedDirectoryLabel", null }, { "lastOpenedDirectoryImage", null }, { "labelFile", null } };
         private HashSet<string> allClasses = new HashSet<string> { "traffic sign", "traffic light", "car", "rider", "motor", "person", "bus", "truck", "bike", "train" };
 
         public void SaveConfig()
@@ -49,7 +50,7 @@ namespace AttentionAndRetag.Config
             if (fi.Exists)
             {
                 StringReader sr = new StringReader(System.IO.File.ReadAllText(config_file));
-                string line = null;
+                string line;
                 while ((line = sr.ReadLine()) != null)
                 {
                     var splt = line.Split('=');
@@ -98,20 +99,20 @@ namespace AttentionAndRetag.Config
         }
         public int GETKnownCategoryID(string s)
         {
-            switch (s)
+            return s switch
             {
-                case "traffic sign": return 0;
-                case "traffic light": return 0;
-                case "car": return 1;
-                case "rider": return 2;
-                case "motor": return 1;
-                case "person": return 3;
-                case "bus": return 1;
-                case "truck": return 1;
-                case "bike": return 2;
-                case "train": return 1;
-            }
-            return -1;
+                "traffic sign" => 0,
+                "traffic light" => 0,
+                "car" => 1,
+                "rider" => 2,
+                "motor" => 1,
+                "person" => 3,
+                "bus" => 1,
+                "truck" => 1,
+                "bike" => 2,
+                "train" => 1,
+                _ => -1,
+            };
         }
     }
 }

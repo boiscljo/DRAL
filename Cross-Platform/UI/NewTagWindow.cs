@@ -25,12 +25,12 @@ namespace DRAL.UI
 {
     public partial class NewTagWindow : DRALWindow
     {
-        AttentionHandler attentionHandler;
-        ConfigurationManager manager;
-        Tagger tagger;
-        AttentionMapAnalizer analyser;
+        readonly AttentionHandler attentionHandler;
+        readonly ConfigurationManager manager;
+        readonly Tagger tagger;
+        readonly AttentionMapAnalizer analyser;
         PointF last;
-        DisplayModelNew model;
+        readonly DisplayModelNew model;
         const int windowSize = 100;
         DateTime lastUpdate;
         private double dispBeginX;
@@ -38,7 +38,7 @@ namespace DRAL.UI
         private double dispBeginY;
         private double dispEndY;
 
-        Dictionary<uint, bool> buttonsPressed = new Dictionary<uint, bool>();
+        readonly Dictionary<uint, bool> buttonsPressed = new Dictionary<uint, bool>();
 
         public NewTagWindow()
         {
@@ -120,8 +120,10 @@ namespace DRAL.UI
             gtkWin,
             Gtk.FileChooserAction.Open,
             "Cancel", Gtk.ResponseType.Cancel,
-            "Open", Gtk.ResponseType.Accept);
-            fc.Filter = new FileFilter();
+            "Open", Gtk.ResponseType.Accept)
+                {
+                    Filter = new FileFilter()
+                };
             fc.Filter.AddPattern("*.jpg");
             fc.Filter.AddPattern("*.png");
             fc.Filter.AddPattern("*.bmp");
@@ -132,29 +134,14 @@ namespace DRAL.UI
             {
                 attentionHandler.OpenImage(fc.Filename, true);
                 manager.SaveConfig();
-                LoadImageInformation(fc.Filename);
+                LoadImageInformation();
             }
 
             //Destroy() to close the File Dialog
             fc.Dispose();
         }
-        private void SaveFile_(string _name_, Image<Pixel> img)
-        {
-            using (var s = System.IO.File.Create(_name_))
-            {
-                new JPEGCodec().Save<Pixel>(img, s);
-            }
-        }
-        private Image<T> LoadFile_<T>(string p)
-            where T:unmanaged
-        {
-            BitmapFactory bf = new BitmapFactory();
-            using (var fs = System.IO.File.OpenRead(p))
-            {
-                return bf.Decode(fs).ConvertTo<T>();
-            }
-        }
-       
+     
+             
         private async Task<bool> GenerateAndSave()
         {
             bool ret = false;
@@ -184,9 +171,9 @@ namespace DRAL.UI
                                 var newLabel = await tagger.ImproveLabel(iActivated, attentionHandler.Image, grayscale, label);
                                 SaveLabel("./data/imp/labels/" + _name_ + ".txt", newLabel, attentionHandler.Image.Width, attentionHandler.Image.Height);
                             }*/
-                            SaveFile_("./step1/img/ori/" + _name_ + ".jpg", attentionHandler.Image);
-                            SaveFile_("./step1/img/imp/" + _name_ + ".jpg", applied);
-                            SaveFile_("./step1/map/" + _name_ + ".jpg", grayscale.ConvertTo<Pixel>());
+                            Program.SaveFile_("./step1/img/ori/" + _name_ + ".jpg", attentionHandler.Image);
+                            Program.SaveFile_("./step1/img/imp/" + _name_ + ".jpg", applied);
+                            Program.SaveFile_("./step1/map/" + _name_ + ".jpg", grayscale.ConvertTo<Pixel>());
 
                             if (chkGenNow.Active)
                             {
@@ -217,8 +204,8 @@ namespace DRAL.UI
 
         private async Task GenBox(string _name_)
         {
-            var source = LoadFile_<Pixel>("./step1/img/ori/" + _name_ + ".jpg");
-            var grayscale =LoadFile_<byte>("./step1/map/" + _name_ + ".jpg");
+            var source = Program.LoadFile_<Pixel>("./step1/img/ori/" + _name_ + ".jpg");
+            var grayscale = Program.LoadFile_<byte>("./step1/map/" + _name_ + ".jpg");
 
             if (Program.verbose)
                 Console.WriteLine("Generating box for {0}", _name_);
@@ -247,7 +234,7 @@ namespace DRAL.UI
             var pos = new PointF(args.Event.X, args.Event.Y);
 
             DisplayMaskOver(new PointF(pos.X, pos.Y));//Display mask
-            if (attentionHandler.IsSet() && model.isNotRunning)
+            if (attentionHandler.IsSet() && model.IsNotRunning)
             {
                 var scaleX = (attentionHandler.Width / pictureBox.WidthRequest);
                 var scaleY = (attentionHandler.Height / pictureBox.HeightRequest);
@@ -277,7 +264,7 @@ namespace DRAL.UI
             {
                 attentionHandler.Previous();
             }
-            LoadImageInformation(attentionHandler.Filename);
+            LoadImageInformation();
             if (v)
             {
                 var _name_ = attentionHandler.Filename;
@@ -299,7 +286,7 @@ namespace DRAL.UI
         {
             attentionHandler.Next();
 
-            LoadImageInformation(attentionHandler.Filename);
+            LoadImageInformation();
         }
         private void NextUntilNotRecorded()
         {
@@ -312,7 +299,7 @@ namespace DRAL.UI
                 } while (ExistsInTraining());
                 hasLoaded =attentionHandler.LoadCurrent();
             }
-            LoadImageInformation(attentionHandler.Filename);
+            LoadImageInformation();
         }
 
         private bool ExistsInTraining()
@@ -323,7 +310,7 @@ namespace DRAL.UI
             var img_path3 = "./step2/img/ori/" + _name_ + ".jpg";
             return (System.IO.File.Exists(img_path))|| (System.IO.File.Exists(img_path2))|| (System.IO.File.Exists(img_path3));
         }
-        private void LoadImageInformation(string FileName)
+        private void LoadImageInformation()
         {
             var _name_ = attentionHandler.Filename;
             gtkWin.Title = _name_;
@@ -339,9 +326,7 @@ namespace DRAL.UI
             var existingFile = paths.FirstOrDefault((X) => System.IO.File.Exists(X));
             if (existingFile!=null)
             {
-                BitmapFactory bitmapFactory = new BitmapFactory();
-                using (var fs = System.IO.File.OpenRead(existingFile))
-                    iActivation.Image = (bitmapFactory.Decode(fs));
+                iActivation.Image = Program.LoadFile_<Pixel>(existingFile);
             }
             else
                 iActivation.Image = null;
@@ -470,7 +455,7 @@ namespace DRAL.UI
                 ctx.SetSourceRGB(0, 0, 0);
                 ctx.Rectangle(0, 0, windowSize, windowSize);
                 ctx.Fill();
-                if (model.isNotRunning)
+                if (model.IsNotRunning)
                 {
                     var SubImage = attentionHandler.Image[new Rectangle((int)(dispBeginX * scaleX), (int)(dispBeginY * scaleY), (int)(windowSize * scaleX), (int)(windowSize * scaleY))].ToImage<BGRA>();
                     var img = SubImage.Rescale(windowSize, windowSize, ScalingMode.AverageInterpolate);

@@ -24,12 +24,12 @@ namespace DRAL.UI
 {
     public partial class RetagWindow: DRALWindow
     {
-        AttentionHandler attentionHandler;
-        ConfigurationManager manager;
-        Retagger retag;
-        AttentionMapAnalizer analyser;
+        readonly AttentionHandler attentionHandler;
+        readonly ConfigurationManager manager;
+        readonly Retagger retag;
+        readonly AttentionMapAnalizer analyser;
         PointF last;
-        DisplayModel model;
+        readonly DisplayModel model;
         const int windowSize = 100;
         DateTime lastUpdate;
         private double dispBeginX;
@@ -37,7 +37,7 @@ namespace DRAL.UI
         private double dispBeginY;
         private double dispEndY;
 
-        Dictionary<uint, bool> buttonsPressed = new Dictionary<uint, bool>();
+        readonly Dictionary<uint, bool> buttonsPressed = new Dictionary<uint, bool>();
 
         public RetagWindow()
         {
@@ -91,8 +91,10 @@ namespace DRAL.UI
             gtkWin,
             Gtk.FileChooserAction.Open,
             "Cancel", Gtk.ResponseType.Cancel,
-            "Open", Gtk.ResponseType.Accept);
-            fc.Filter = new FileFilter();
+            "Open", Gtk.ResponseType.Accept)
+                {
+                    Filter = new FileFilter()
+                };
             fc.Filter.AddPattern("*.json");
 
             if (fc.Run() == (int)Gtk.ResponseType.Accept)
@@ -146,31 +148,23 @@ namespace DRAL.UI
             gtkWin,
             Gtk.FileChooserAction.Open,
             "Cancel", Gtk.ResponseType.Cancel,
-            "Open", Gtk.ResponseType.Accept);
-            fc.Filter = new FileFilter();
+            "Open", Gtk.ResponseType.Accept)
+                {
+                    Filter = new FileFilter()
+                };
             fc.Filter.AddPattern("*.jpg");
 
             if (fc.Run() == (int)Gtk.ResponseType.Accept)
             {
                 attentionHandler.OpenImage(fc.Filename, true);
                 manager.SaveConfig();
-                LoadImageInformation(fc.Filename);
+                LoadImageInformation();
             }
 
             //Destroy() to close the File Dialog
             fc.Dispose();
         }
-        private void SaveFile_(string _name_, Image<Pixel> img)
-        {
-            using (var s = System.IO.File.Create(_name_))
-            {
-                new JPEGCodec().Save<Pixel>(img, s);
-            }
-        }
-        private void SaveLabel(string v, IMAGE_LABEL_INFO label, double w, double h)
-        {
-            System.IO.File.WriteAllText(v, retag.GenerateFile(label, w, h));
-        }
+             
         private async Task<bool> GenerateAndSave()
         {
             bool ret = false;
@@ -202,12 +196,12 @@ namespace DRAL.UI
                             if (chkGenNow.Active)
                             {
                                 var newLabel = await retag.ImproveLabel(iActivated, attentionHandler.Image, grayscale, label);
-                                SaveLabel("./data/imp/labels/" + _name_ + ".txt", newLabel, attentionHandler.Image.Width, attentionHandler.Image.Height);
+                                Program.SaveLabel("./data/imp/labels/" + _name_ + ".txt", newLabel, attentionHandler.Image.Width, attentionHandler.Image.Height);
                             }
-                            SaveFile_("./data/ori/images/" + _name_ + ".jpg", attentionHandler.Image);
-                            SaveLabel("./data/ori/labels/" + _name_ + ".txt", label, attentionHandler.Image.Width, attentionHandler.Image.Height);
-                            SaveFile_("./data/imp/images/" + _name_ + ".jpg", applied);
-                            SaveFile_("./data/map/images/" + _name_ + ".jpg", grayscale.ConvertTo<Pixel>());
+                            Program.SaveFile_("./data/ori/images/" + _name_ + ".jpg", attentionHandler.Image);
+                            Program.SaveLabel("./data/ori/labels/" + _name_ + ".txt", label, attentionHandler.Image.Width, attentionHandler.Image.Height);
+                            Program.SaveFile_("./data/imp/images/" + _name_ + ".jpg", applied);
+                            Program.SaveFile_("./data/map/images/" + _name_ + ".jpg", grayscale.ConvertTo<Pixel>());
                             model.HadChangedTraining();
                         }
                         DateTime endPopup = DateTime.Now;
@@ -228,7 +222,7 @@ namespace DRAL.UI
             var pos = new PointF(args.Event.X, args.Event.Y);
 
             DisplayMaskOver(new PointF(pos.X, pos.Y));//Display mask
-            if (attentionHandler.IsSet() && model.isNotRunning)
+            if (attentionHandler.IsSet() && model.IsNotRunning)
             {
                 var scaleX = (attentionHandler.Width / pictureBox.WidthRequest);
                 var scaleY = (attentionHandler.Height / pictureBox.HeightRequest);
@@ -258,7 +252,7 @@ namespace DRAL.UI
             {
                 attentionHandler.Previous();
             }
-            LoadImageInformation(attentionHandler.Filename);
+            LoadImageInformation();
             if (v)
             {
                 var _name_ = attentionHandler.Filename;
@@ -286,7 +280,7 @@ namespace DRAL.UI
                 attentionHandler.Next();
                 lbl = manager.GetLabel(attentionHandler.Filename);
             }
-            LoadImageInformation(attentionHandler.Filename);
+            LoadImageInformation();
         }
         private void NextUntilNotRecorded()
         {
@@ -302,7 +296,7 @@ namespace DRAL.UI
                 }
             }
             attentionHandler.LoadCurrent();
-            LoadImageInformation(attentionHandler.Filename);
+            LoadImageInformation();
         }
 
         private bool ExistsInTraining()
@@ -311,7 +305,7 @@ namespace DRAL.UI
             var img_path = "./data/imp/images/" + _name_ + ".jpg";
             return (System.IO.File.Exists(img_path));
         }
-        private void LoadImageInformation(string FileName)
+        private void LoadImageInformation()
         {
             var _name_ = attentionHandler.Filename;
             var lbl = manager.GetLabel(attentionHandler.Filename);
@@ -330,9 +324,7 @@ namespace DRAL.UI
             var exists = (System.IO.File.Exists(img_path));
             if (exists)
             {
-                BitmapFactory bitmapFactory = new BitmapFactory();
-                using (var fs = System.IO.File.OpenRead(img_path))
-                    iActivation.Image = (bitmapFactory.Decode(fs));
+                iActivation.Image = Program.LoadFile_<Pixel>(img_path);
             }
             else
                 iActivation.Image = null;
@@ -385,7 +377,6 @@ namespace DRAL.UI
 
                 var originals_label = (from x in Directory.GetFiles("./data/ori/labels") select new FileInfo(x).Name).ToArray();
                 var finals_label = (from x in Directory.GetFiles("./data/imp/labels") select new FileInfo(x).Name).ToArray();
-                var bf = new BitmapFactory();
                 int missing_both=0;
                 int countFix = 0;
                 //Fix untagged finals
@@ -402,8 +393,8 @@ namespace DRAL.UI
                                 var img = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
                                 var label = manager.GetLabel(img);
 
-                                var ori_img = bf.Decode("./data/ori/images/" + img + ".jpg");
-                                var grayscale = bf.Decode("./data/map/images/" + img + ".jpg");
+                                var ori_img = Program.LoadFile_<Pixel>("./data/ori/images/" + img + ".jpg");
+                                var grayscale = Program.LoadFile_<Pixel>("./data/map/images/" + img + ".jpg");
                                 countFix++;
                                 if (Program.verbose)
                                     Console.WriteLine("Fixing missing labels for " + label_path);
@@ -420,7 +411,7 @@ namespace DRAL.UI
                                 var newLabel = await task;
                                 if (Program.verbose)
                                     Console.WriteLine("Saving labels to ./data/imp/labels/" + label_path);
-                                SaveLabel("./data/imp/labels/" + label_path, newLabel, ori_img.Width, ori_img.Height);
+                                Program.SaveLabel("./data/imp/labels/" + label_path, newLabel, ori_img.Width, ori_img.Height);
                             }
                             catch (Exception er)
                             {
@@ -447,9 +438,8 @@ namespace DRAL.UI
                     if (!maps.Contains(ori))
                     {
                         //Map is missing
-
-                        var ori_img = bf.Decode("./data/ori/images/" + ori);
-                        var fin_img = bf.Decode("./data/imp/images/" + ori);
+                        var ori_img = Program.LoadFile_<Pixel>("./data/ori/images/" + ori);
+                        var fin_img = Program.LoadFile_<Pixel>("./data/imp/images/" + ori);
                         var map = Image<byte>.Create(ori_img.Width, ori_img.Height);
                         countFix++;
 
@@ -486,12 +476,11 @@ namespace DRAL.UI
                             }
                         }
 
-                        map.SaveJPG("./data/map/images/" + ori);
-
+                        Program.SaveFile_("./data/map/images/" + ori, map);
                     }
                 });
 
-                void DeleteIfExists(string path)
+                static void DeleteIfExists(string path)
                 {
                     if (Program.verbose)
                         Console.WriteLine("Deleting orphan file " + path);
@@ -610,7 +599,7 @@ namespace DRAL.UI
                 ctx.SetSourceRGB(0, 0, 0);
                 ctx.Rectangle(0, 0, windowSize, windowSize);
                 ctx.Fill();
-                if (model.isNotRunning)
+                if (model.IsNotRunning)
                 {
                     var SubImage = attentionHandler.Image[new Rectangle((int)(dispBeginX * scaleX), (int)(dispBeginY * scaleY), (int)(windowSize * scaleX), (int)(windowSize * scaleY))].ToImage<BGRA>();
                     var img = SubImage.Rescale(windowSize, windowSize, ScalingMode.AverageInterpolate);

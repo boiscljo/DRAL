@@ -17,15 +17,16 @@ namespace AttentionAndRetag.Model
     {
         public event PropertyChangedEventHandler PropertyChanged;
         public int TrainingFileCount => new DirectoryInfo("./data/ori/labels/").EnumerateFiles().Count();
-        RetagWindow win;
+
+        readonly RetagWindow win;
         public DisplayModel(RetagWindow window)
         {
             win = window;
             EmitChanged(nameof(TrainingFileCount));
         }
 
-        private Semaphore semaphore = new Semaphore(1, 1);
-        private Semaphore semaphoreScr = new Semaphore(1, 1);
+        private readonly Semaphore semaphore = new Semaphore(1, 1);
+        private readonly Semaphore semaphoreScr = new Semaphore(1, 1);
         public void EmitChanged(string name)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -37,15 +38,15 @@ namespace AttentionAndRetag.Model
 
         private void SetRunning(bool v)
         {
-            isRunning = v;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(isRunning)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(isNotRunning)));
+            IsRunning = v;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsRunning)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsNotRunning)));
             if (Program.withWindow)
                 foreach (var b in win.buttons)
                     b.Sensitive = !v;
         }
-        public bool isRunning { get; set; } = false;
-        public bool isNotRunning => !isRunning;
+        public bool IsRunning { get; set; } = false;
+        public bool IsNotRunning => !IsRunning;
 
         public void RequestRun(Action a)
         {
