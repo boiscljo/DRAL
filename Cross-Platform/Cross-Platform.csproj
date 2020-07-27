@@ -7,8 +7,8 @@
     <AssemblyName>DRAL</AssemblyName>
     <RepositoryUrl>https://github.com/boiscljo/DRAL</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.0.1.0</AssemblyVersion>
-    <FileVersion>1.0.1.0</FileVersion>
+    <AssemblyVersion>1.0.2.0</AssemblyVersion>
+    <FileVersion>1.0.2.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -20,31 +20,12 @@
 
   <ItemGroup>
     <PackageReference Include="GtkSharp" Version="3.22.25.74" />
+    <PackageReference Include="MoyskleyTech.ImageProcessing" Version="1.0.1" />
+    <PackageReference Include="MoyskleyTech.ImageProcessing.JPEGCodec" Version="1.0.1" />
+    <PackageReference Include="MoyskleyTech.ImageProcessing.PNGCodec" Version="1.0.1" />
+    <PackageReference Include="MoyskleyTech.ImageProcessing.Recognition" Version="1.0.1" />
+    <PackageReference Include="MoyskleyTech.Mathematics" Version="1.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="BitMiracle.LibJpeg.NET">
-      <HintPath>DLL\BitMiracle.LibJpeg.NET.dll</HintPath>
-    </Reference>
-    <Reference Include="ImageProcessing.JPEGCodec">
-      <HintPath>DLL\ImageProcessing.JPEGCodec.dll</HintPath>
-    </Reference>
-    <Reference Include="ImageProcessing.PNGCodec">
-      <HintPath>DLL\ImageProcessing.PNGCodec.dll</HintPath>
-    </Reference>
-    <Reference Include="MoyskleyTech.ImageProcessing">
-      <HintPath>DLL\MoyskleyTech.ImageProcessing.dll</HintPath>
-    </Reference>
-    <Reference Include="MoyskleyTech.ImageProcessing.Recognition">
-      <HintPath>DLL\MoyskleyTech.ImageProcessing.Recognition.dll</HintPath>
-    </Reference>
-    <Reference Include="MoyskleyTech.Math">
-      <HintPath>DLL\MoyskleyTech.Math.dll</HintPath>
-    </Reference>
-    <Reference Include="MoyskleyTech.Serialization">
-      <HintPath>DLL\MoyskleyTech.Serialization.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>
