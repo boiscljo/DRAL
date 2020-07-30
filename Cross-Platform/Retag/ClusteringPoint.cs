@@ -20,7 +20,8 @@ namespace AttentionAndRetag.Retag
 
 		public int Length => Point.Length;
 
-		public IEnumerable<T> Zip<T>(IVectorizable b, Func<double, double, T> func)
+		public IEnumerable<T> Zip<T>(IVectorizable b,
+                               Func<double, double, T> func)
 		{
 			return Point.Zip(b, func);
 		}

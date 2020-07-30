@@ -10,18 +10,18 @@ namespace AttentionAndRetag.Config
 {
     public class ConfigurationManager
     {
-        private LABEL_FILE labels;
-        const string label_dir = "Z:\\Datasets\\bdd100k_labels_release\\bdd100k\\labels";
-        const string img_dir = "Z:\\Datasets\\bdd100k_images\\bdd100k\\images\\100k\\val";
+        private LABEL_FILE? labels;
+        const string label_dir = @"Z:\Datasets\bdd100k_labels_release\bdd100k\labels";
+        const string img_dir = @"Z:\Datasets\bdd100k_images\bdd100k\images\100k\val";
         const string config_file = "load_config.ini";
-        public string LastOpenedDirectoryLabel { get => cfg["lastOpenedDirectoryLabel"]; set => cfg["lastOpenedDirectoryLabel"] = value; }
-        public string LastOpenedDirectoryImage { get => cfg["lastOpenedDirectoryImage"]; set => cfg["lastOpenedDirectoryImage"] = value; }
-        public string LabelFile { get => cfg["labelFile"]; set => cfg["labelFile"] = value; }
+        public string? LastOpenedDirectoryLabel { get => cfg["lastOpenedDirectoryLabel"]; set => cfg["lastOpenedDirectoryLabel"] = value; }
+        public string? LastOpenedDirectoryImage { get => cfg["lastOpenedDirectoryImage"]; set => cfg["lastOpenedDirectoryImage"] = value; }
+        public string? LabelFile { get => cfg["labelFile"]; set => cfg["labelFile"] = value; }
         public bool NeedLabel { get; set; } = true;
         public DirectoryInfo LabelDirectory { get; private set; } = new DirectoryInfo(label_dir);
         public DirectoryInfo ImgDirectory { get; private set; } = new DirectoryInfo(img_dir);
 
-        readonly Dictionary<string, string> cfg = new Dictionary<string, string>() { { "lastOpenedDirectoryLabel", null }, { "lastOpenedDirectoryImage", null }, { "labelFile", null } };
+        readonly Dictionary<string, string?> cfg = new Dictionary<string, string?>() { { "lastOpenedDirectoryLabel", null }, { "lastOpenedDirectoryImage", null }, { "labelFile", null } };
         private HashSet<string> allClasses = new HashSet<string> { "traffic sign", "traffic light", "car", "rider", "motor", "person", "bus", "truck", "bike", "train" };
 
         public void SaveConfig()
@@ -35,14 +35,8 @@ namespace AttentionAndRetag.Config
             System.IO.File.WriteAllText(config_file, sw.ToString());
         }
 
-        public void Init()
-        {
-            LoadConfig();
-        }
-        public IMAGE_LABEL_INFO GetLabel(string filename)
-        {
-            return labels.FirstOrDefault((x) => x.name == filename + ".jpg");
-        }
+        public void Init() => LoadConfig();
+        public IMAGE_LABEL_INFO GetLabel(string filename) => labels.FirstOrDefault((x) => x.name == filename + ".jpg");
 
         public void LoadConfig()
         {
@@ -50,7 +44,7 @@ namespace AttentionAndRetag.Config
             if (fi.Exists)
             {
                 StringReader sr = new StringReader(System.IO.File.ReadAllText(config_file));
-                string line;
+                string? line;
                 while ((line = sr.ReadLine()) != null)
                 {
                     var splt = line.Split('=');
@@ -93,10 +87,7 @@ namespace AttentionAndRetag.Config
             allClasses = elements;
         }
         public HashSet<string> Classes => allClasses.ToHashSet();
-        public bool IsKnownCategory(string s)
-        {
-            return allClasses.Contains(s);
-        }
+        public bool IsKnownCategory(string s) => allClasses.Contains(s);
         public int GETKnownCategoryID(string s)
         {
             return s switch

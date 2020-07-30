@@ -13,30 +13,21 @@ namespace AttentionAndRetag.Attention
 {
     public class AttentionHandler
     {
-        public ConfigurationManager ConfigurationManager { get; set; }
+        public ConfigurationManager? ConfigurationManager { get; set; }
         public double WindowSize { get; set; } = 100;
 
-        const double MIN_SECOND = 0.1;
-        Image<double> attentionMap;
-        Image<Pixel> img;
+        private const double MIN_SECOND = 0.1;
 
-        public void Init()
+        public void BuildActivationMap(PointF position,
+                                       SizeF size,
+                                       TimeSpan duration,
+                                       bool shouldRemove)
         {
-
-        }
-
-        public void BuildActivationMap(PointF position, SizeF size, TimeSpan duration, bool shouldRemove)
-        {
-            if (attentionMap != null)
+            if (AttentionMap != null)
             {
-
-                ImageProxy<double> imageProxy = attentionMap?.Proxy(
+                ImageProxy<double> imageProxy = AttentionMap?.Proxy(
                     new Rectangle((int)(position.X - size.Width / 2), (int)(position.Y - size.Height / 2),
                     (int)size.Width, (int)size.Height));
-
-                var ts = duration;
-
-                var removeFactor = shouldRemove ? -1 : 1;
                 imageProxy?.ApplyFilter((px, pt) =>
                 {
                     var ix = (pt.X / size.Width) * 2 - 1;
@@ -46,33 +37,35 @@ namespace AttentionAndRetag.Attention
                     var distance = Math.Pow((ix * ix + iy * iy), 0.5);
 
                     //=2*(1- 2^(D1*A1+C1) / (2^(D1*A1+C1)+1))
-                    var _base = 1.5d;
-                    var _mult_dist = 8;
-                    var _off = -1;
-                    var _mult = 2;
+                    const double _base = 1.5d;
+                    const double _mult_dist = 8;
+                    const double _off = -1;
+                    const double _mult = 2;
+
                     var distanceFactor = _mult * (1 - Math.Pow(_base, _mult_dist * distance + _off) / (Math.Pow(_base, _mult_dist * distance + _off) + 1));
-                    return px += ts.TotalMilliseconds * distanceFactor * removeFactor;
+
+                    var removeFactor = shouldRemove ? -1 : 1;
+                    return px += duration.TotalMilliseconds * distanceFactor * removeFactor;
                 });
             }
         }
 
 
 
-        public void Reset()
-        {
-            attentionMap?.ApplyFilter((px, pt) => 0);
-        }
-        public double Width => attentionMap?.Width ?? double.NaN;
-        public double Height => attentionMap?.Height ?? double.NaN;
-        public string Filename { get; private set; }
-        public Image<Pixel> Image => img;
+        public void Reset() => AttentionMap?.ApplyFilter((px, pt) => 0);
+        public double Width => AttentionMap?.Width ?? double.NaN;
+        public double Height => AttentionMap?.Height ?? double.NaN;
+        public string? Filename { get; private set; }
+        public Image<Pixel>? Image { get; private set; }
 
-        private FileInfo[] files;
+        private FileInfo[]? files;
 
         public int ImageIndex { get; set; } = 0;
         public bool AllowWithoutLabel { get; internal set; }
+        public Image<double>? AttentionMap { get; set; }
 
-        internal Image<Pixel> OpenImage(string fileName, bool loadFolder)
+        internal Image<Pixel> OpenImage(string fileName,
+                                        bool loadFolder)
         {
             try
             {
@@ -82,13 +75,13 @@ namespace AttentionAndRetag.Attention
                 ConfigurationManager.LastOpenedDirectoryImage = dir.FullName;
                 
                 var totFileName = fileName;
-                FileInfo fi = new FileInfo(totFileName);
-                Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
+                var fileInfoTotal = new FileInfo(totFileName);
+                Filename = fileInfoTotal.Name.Substring(0, fileInfoTotal.Name.Length - fileInfoTotal.Extension.Length);
 
-                img = Program.LoadFile_<Pixel>(fileName);
+                Image = Program.LoadFile_<Pixel>(fileName);
               
-                attentionMap = new Image<double>(img.Width, img.Height);
-                attentionMap.ApplyFilter((px, pt) => 0);
+                AttentionMap = new Image<double>(Image.Width, Image.Height);
+                AttentionMap.ApplyFilter((px, pt) => 0);
 
                 if (loadFolder)
                 {
@@ -106,7 +99,7 @@ namespace AttentionAndRetag.Attention
                         Console.WriteLine("Loading image {0}", ImageIndex);
                 }
 
-                return img;
+                return Image;
             }
             catch
             {
@@ -147,10 +140,10 @@ namespace AttentionAndRetag.Attention
             {
                 
                 FileInfo fi = files[ImageIndex];
-                img = Program.LoadFile_<Pixel>(fi.FullName);
+                Image = Program.LoadFile_<Pixel>(fi.FullName);
              
-                attentionMap = new Image<double>(img.Width, img.Height);
-                attentionMap.ApplyFilter((px, pt) => 0);
+                AttentionMap = new Image<double>(Image.Width, Image.Height);
+                AttentionMap.ApplyFilter((px, pt) => 0);
                 return true;
             }
             catch
@@ -165,20 +158,20 @@ namespace AttentionAndRetag.Attention
                 ImageIndex = files.Length - 1;
             FileInfo fi = files[ImageIndex];
             Filename = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
-            img = Program.LoadFile_<Pixel>(fi.FullName);
+            Image = Program.LoadFile_<Pixel>(fi.FullName);
            
-            attentionMap = new Image<double>(img.Width, img.Height);
-            attentionMap.ApplyFilter((px, pt) => 0);
+            AttentionMap = new Image<double>(Image.Width, Image.Height);
+            AttentionMap.ApplyFilter((px, pt) => 0);
             if (Program.verbose)
                 Console.WriteLine("Loading image {0}", ImageIndex);
             return fi.FullName;
         }
         public void GenerateGrayscale(out Image<byte> grayscale)
         {
-            var size = attentionMap.Width * attentionMap.Height;
-            var max = Math.Min(5000, (from x in Enumerable.Range(0, size) select attentionMap[x]).Max());
+            var size = AttentionMap.Width * AttentionMap.Height;
+            var max = Math.Min(5000, (from x in Enumerable.Range(0, size) select AttentionMap[x]).Max());
 
-            var normalized = attentionMap.Clone();
+            var normalized = AttentionMap.Clone();
             normalized.ApplyFilter((px, pt) => Math.Max(0, px - MIN_SECOND * 1000));
             normalized.ApplyFilter((px, pt) => Math.Min(px, max) / max);
             Image<byte> hray = grayscale = normalized.ConvertUsing<byte>((dbl) => (byte)(dbl * 255));
@@ -186,7 +179,7 @@ namespace AttentionAndRetag.Attention
         }
         public void GenerateApplied(out Image<Pixel> applied, Image<byte> hray)
         {
-            applied = img.Clone();
+            applied = Image.Clone();
             applied.ApplyFilter((px, pt) =>
             {
                 return Pixel.FromArgb(px, hray[pt]).Over(Pixel.FromArgb(255, 128, 128, 128));
@@ -204,15 +197,9 @@ namespace AttentionAndRetag.Attention
         }
 
 
-        public bool IsSet()
-        {
-            return attentionMap != null;
-        }
+        public bool IsSet => AttentionMap != null;
 
-        public Image<Pixel> GetImageCopy()
-        {
-            return img.Clone();
-        }
+        public Image<Pixel> ImageCopy => Image.Clone();
 
     }
 }

@@ -142,7 +142,8 @@ namespace AttentionAndRetag.Retag
 			return loopCount;
 		}
 
-		private int GetNearestIndex(T p, List<T> centerList)
+		private int GetNearestIndex(T p,
+                              List<T> centerList)
 		{
 			var value = GetDistance(CenterList[0], p);
 			var index = 0;

@@ -26,10 +26,8 @@ namespace AttentionAndRetag.Retag
             return this;
         }
 
-        public double[] ToVector()
-        {
-            return new double[] { X, Y, Z };
-        }
+        public double[] ToVector() => new double[] { X, Y, Z };
+        public void Deconstruct(out double x, out double y, out double z) => (x, y, z) = (X, Y, Z);
 
         public bool IsValid => !double.IsInfinity(X) && !double.IsInfinity(Y) && !double.IsInfinity(Z) &&
             !double.IsNaN(X) && !double.IsNaN(Y) && !double.IsNaN(Z);
@@ -38,15 +36,16 @@ namespace AttentionAndRetag.Retag
 
         public double Get(int idx)
         {
-            if (idx == 0)
-                return X;
-            if (idx == 1)
-                return  Y;
-            if (idx == 2)
-                return Z;
-            return double.NaN;
+            return idx switch
+            {
+                0 => X,
+                1 => Y,
+                2 => Z,
+                _ => double.NaN
+            };
         }
-        public void Set(int idx,double val)
+        public void Set(int idx,
+                        double val)
         {
             if (idx == 0)
                 X = val;
@@ -56,7 +55,8 @@ namespace AttentionAndRetag.Retag
                 Z = val;
         }
 
-        public IEnumerable<T> Zip<T>(IVectorizable b, Func<double, double, T> func)
+        public IEnumerable<T> Zip<T>(IVectorizable b,
+                                     Func<double, double, T> func)
         {
             for (var i = 0; i < Length; i++)
                 yield return func(this[i], b[i]);

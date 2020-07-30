@@ -30,7 +30,8 @@ namespace AttentionAndRetag.Retag
 
             return (clusters);
         }
-        public List<Cluster<Point3>> SplitNonTouching(List<Cluster<Point3>> clusters, int minSize = 20)
+        public List<Cluster<Point3>> SplitNonTouching(List<Cluster<Point3>> clusters,
+                                                      int minSize = 20)
         {
             List<Cluster<Point3>> workingSet = clusters.ToList();
             List<Rectangle3> rectangles = (from x in clusters select ToBox(x.Data)).ToList();
@@ -88,20 +89,25 @@ namespace AttentionAndRetag.Retag
                 StandardFunctions.MinkowskiDistance(3, new double[] { 1, 1, 1 }));
             Kmeans<Point3>.GetMean = StandardFunctions.GetMeanPt3;
         }
-        private void SetBox(BOX2D cls, RectangleF matchedBox)
+        private void SetBox(BOX2D cls,
+                            RectangleF matchedBox)
         {
             cls.x1 = matchedBox.X;
             cls.y1 = matchedBox.Y;
             cls.x2 = matchedBox.Right;
             cls.y2 = matchedBox.Bottom;
         }
-        public void AdaptLabel(List<RectangleF> proposedBoxes, IMAGE_LABEL_INFO labels, double T1=0.9, double T2=0.9, double maxShrink=0.25)
+        public void AdaptLabel(List<RectangleF> proposedBoxes,
+                               IMAGE_LABEL_INFO labels,
+                               double T1 = 0.9,
+                               double T2 = 0.9,
+                               double maxShrink = 0.25)
         {
             foreach (var cls in labels.labels)//foreach label
             {
                 var box = cls.box2d;
                 string className = cls.category;
-                var color = StandardFunctions.RandomColor();
+                var color = StandardFunctions.RandomColor;
                 if (box != null)
                 {
                     double x1 = box.x1, x2 = box.x2, y1 = box.y1, y2 = box.y2;
@@ -165,7 +171,10 @@ namespace AttentionAndRetag.Retag
                 }
             }
         }
-        public async Task<IEnumerable<RectangleF>> Cluster(Image<Pixel> image, Graphics<Pixel> graphics, int p, double wz)
+        public async Task<IEnumerable<RectangleF>> Cluster(Image<Pixel> image,
+                                                           Graphics<Pixel>? graphics,
+                                                           int p,
+                                                           double wz)
         {
             Kmeans<Point3>.GetDistance = StandardFunctions.Adapt<IVectorizable, IVectorizable, Point3, Point3, double, double>(
             StandardFunctions.MinkowskiDistance(p, new double[] { 1, 1, wz }));
@@ -173,7 +182,7 @@ namespace AttentionAndRetag.Retag
             clusters = SplitNonTouching(clusters);
             //clusters = MergeBox(clusters);
 
-            var colors = (from x in clusters select StandardFunctions.RandomColor()).ToList();
+            var colors = (from x in clusters select StandardFunctions.RandomColor).ToList();
             var clustersWithColor = clusters.Zip(colors);
             foreach (var (First, Second) in clustersWithColor)
             {
@@ -256,7 +265,9 @@ namespace AttentionAndRetag.Retag
 
             return workingSet;
         }
-        public static bool AreClusterTouching(Cluster<Point3> a, Cluster<Point3> b, Rectangle3 b1)//b is larger
+        public static bool AreClusterTouching(Cluster<Point3> a,
+                                              Cluster<Point3> b,
+                                              Rectangle3 b1)//b is larger
         {
             static Point ToPt(Point3 pt)
             {

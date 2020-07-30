@@ -14,7 +14,7 @@ namespace DRAL.UI
             this.WidthRequest = siz.Width;
             this.HeightRequest = siz.Height;
         }
-        public Image<Pixel> Image
+        public Image<Pixel>? Image
         {
             set
             {

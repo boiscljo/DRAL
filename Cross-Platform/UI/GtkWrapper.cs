@@ -16,10 +16,7 @@ namespace DRAL.UI
         public static Pixbuf ToPixbuf<T>(Image<T> input)
             where T: unmanaged
         {
-            MemoryStream ms = new MemoryStream();
-            input.Save(ms);
-            ms.Position = 0;
-            return new Pixbuf(ms);
+            return ToPixbuf((ImageProxy<T>)input);
         }
         public static Pixbuf ToPixbuf<T>(ImageProxy<T> input)
             where T : unmanaged

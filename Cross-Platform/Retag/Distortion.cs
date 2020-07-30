@@ -37,7 +37,9 @@ algorithm:
         set color of pixel (x, y) to color of source image pixel at (sourceX, sourceY)
 
 */
-        public static Image<T> CorrectImage<T>(ImageProxy<T> src,float strength, float zoom)
+        public static Image<T> CorrectImage<T>(ImageProxy<T> src,
+                                               float strength,
+                                               float zoom)
             where T:unmanaged
         {
             var halfwidth = src.Width/2;

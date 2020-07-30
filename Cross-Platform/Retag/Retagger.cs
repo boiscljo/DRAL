@@ -15,14 +15,16 @@ namespace AttentionAndRetag.Retag
 {
     public class Retagger
     {
-        public ConfigurationManager ConfigurationManager { get; set; }
+        public ConfigurationManager? ConfigurationManager { get; set; }
 
-        public async Task<IMAGE_LABEL_INFO> ImproveLabel(FixedSizeImage iActivated, Image<Pixel> img, Image<byte> gray, IMAGE_LABEL_INFO label)
+        public async Task<IMAGE_LABEL_INFO> ImproveLabel(FixedSizeImage? iActivated,
+                                                         Image<Pixel>? img,
+                                                         Image<byte>? gray,
+                                                         IMAGE_LABEL_INFO label)
         {
             var ctx = img.Clone();
 
-
-            MoyskleyTech.ImageProcessing.Image.Graphics<Pixel> graphics=null;
+            MoyskleyTech.ImageProcessing.Image.Graphics<Pixel>? graphics=null;
             if (iActivated != null)
             {
                 graphics = MoyskleyTech.ImageProcessing.Image.Graphics.FromImage(ctx);
@@ -36,20 +38,13 @@ namespace AttentionAndRetag.Retag
             graphics?.Clear(Pixels.White);
             graphics?.DrawImage(img, 0, 0);
 
-
             List<RectangleF> proposedBoxes = new List<RectangleF>();
 
             AttentionMapAnalizer c = new AttentionMapAnalizer();
             //Foreach config, keep proposed boxes
-            foreach (var cfg in new CFG[] {
-                    new CFG(){ p=1, wz=3},
-                    new CFG(){ p=1, wz=img.Width/255f},
-                    new CFG(){ p=4, wz=3},
-                    new CFG(){ p=4, wz=4},
-                    new CFG(){ p=4, wz=img.Width/255f}
-                    })
+            foreach (var (p, wz) in StandardFunctions.ListXMeansModes(img))
             {
-                proposedBoxes.AddRange(await c.Cluster(gray.ConvertTo<Pixel>(), graphics, cfg.p, cfg.wz));
+                proposedBoxes.AddRange(await c.Cluster(gray.ConvertTo<Pixel>(), graphics, p, wz));
                 if (iActivated != null)
                     Application.Invoke((_, _1) =>
                     {
@@ -57,7 +52,7 @@ namespace AttentionAndRetag.Retag
                     });
                 if (Program.verbose)
                 {
-                    Console.WriteLine("{2} MODE {0} {1}",cfg.p, cfg.wz, label.name);
+                    Console.WriteLine("{2} MODE {0} {1}",p, wz, label.name);
                 }
             }
 

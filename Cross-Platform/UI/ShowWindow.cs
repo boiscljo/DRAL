@@ -25,10 +25,10 @@ namespace DRAL.UI
 {
     public partial class ShowWindow : DRALWindow
     {
-        readonly Image<Pixel> image;
-        private Image<BGRA> img_bgra;
-        private ImageSurface ims;
-        private Image<Pixel> img_tmp;
+        readonly Image<Pixel>? image;
+        private Image<BGRA>? img_bgra;
+        private ImageSurface? ims;
+        private Image<Pixel>? img_tmp;
         public ShowWindow()
         {
             Init();
@@ -37,8 +37,8 @@ namespace DRAL.UI
 
             var img = Program.file_in;
 
-            var dataset = img.Split("/")[0];
-            var imgName = img.Split("/")[1];
+            var dataset = img?.Split("/")[0];
+            var imgName = img?.Split("/")[1];
 
             var full_file_name_image = "data/" + dataset + "/images/" + imgName + ".jpg";
             var full_file_name_label = "data/" + dataset + "/labels/" + imgName + ".txt";

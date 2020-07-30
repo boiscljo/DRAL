@@ -30,7 +30,7 @@ namespace DRAL.UI
         readonly Tagger tagger;
         readonly AttentionMapAnalizer analyser;
         PointF last;
-        readonly DisplayModelNew model;
+        readonly DisplayModelTagWindow model;
         const int windowSize = 100;
         DateTime lastUpdate;
         private double dispBeginX;
@@ -55,9 +55,7 @@ namespace DRAL.UI
 
             manager.Init();
             analyser.Init();
-            attentionHandler.Init();
-            tagger.Init();
-            model = new DisplayModelNew(this);
+            model = new DisplayModelTagWindow(this);
 
             last = new PointF(-windowSize, -windowSize);
             buttonsPressed[1] = false;
@@ -150,11 +148,11 @@ namespace DRAL.UI
             {
                 try
                 {
-                    if (attentionHandler.IsSet())
+                    if (attentionHandler.IsSet)
                     {
                         DateTime beginPopup = DateTime.Now;
-                        Image<byte> grayscale = null;
-                        Image<Pixel> applied = null;
+                        Image<byte>? grayscale = null;
+                        Image<Pixel>? applied = null;
                         var _name_ = attentionHandler.Filename;
                         await Task.Run(() => attentionHandler.GenerateGrayscaleAndApplied(out grayscale, out applied));
                        
@@ -162,7 +160,7 @@ namespace DRAL.UI
 
                         pr.iActivated.Image = applied;
                         pr.iOri.Image = attentionHandler.Image;
-                        pr.iActivation.Image = grayscale.ConvertTo<Pixel>();
+                        pr.iActivation.Image = grayscale?.ConvertTo<Pixel>();
 
                         if ((ret = await pr.ShowDialogAsync()))
                         {
@@ -234,7 +232,7 @@ namespace DRAL.UI
             var pos = new PointF(args.Event.X, args.Event.Y);
 
             DisplayMaskOver(new PointF(pos.X, pos.Y));//Display mask
-            if (attentionHandler.IsSet() && model.IsNotRunning)
+            if (attentionHandler.IsSet&& model.IsNotRunning)
             {
                 var scaleX = (attentionHandler.Width / pictureBox.WidthRequest);
                 var scaleY = (attentionHandler.Height / pictureBox.HeightRequest);

@@ -4,9 +4,13 @@ using System.Threading.Tasks;
 
 namespace DRAL.UI
 {
+    /// <summary>
+    /// To emulate WPF implementation of MessageBox
+    /// </summary>
     internal class MessageBox
     {
-        internal static bool Show(Window parent, string v)
+        internal static bool Show(Window parent,
+                                  string v)
         {
             if (Program.withWindow)
             {
@@ -23,7 +27,8 @@ namespace DRAL.UI
                 return false;
             }
         }
-        internal static bool ShowWarning(Window parent, string v)
+        internal static bool ShowWarning(Window parent,
+                                         string v)
         {
             if (Program.withWindow)
             {
@@ -40,7 +45,8 @@ namespace DRAL.UI
                 return false;
             }
         }
-        internal static bool ShowError(Window parent, string v)
+        internal static bool ShowError(Window parent,
+                                       string v)
         {
             if (Program.withWindow)
             {

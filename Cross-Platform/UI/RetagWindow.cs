@@ -53,7 +53,6 @@ namespace DRAL.UI
 
             manager.Init();
             analyser.Init();
-            attentionHandler.Init();
             retag.Init();
             model = new DisplayModel(this);
 
@@ -174,15 +173,14 @@ namespace DRAL.UI
                 try
                 {
                     
-                    if (attentionHandler.IsSet())
+                    if (attentionHandler.IsSet)
                     {
                         DateTime beginPopup = DateTime.Now;
-                        Image<byte> grayscale = null;
-                        Image<Pixel> applied = null;
+                        Image<byte>? grayscale = null;
+                        Image<Pixel>? applied = null;
                         var _name_ = attentionHandler.Filename;
                         await Task.Run(() => attentionHandler.GenerateGrayscaleAndApplied(out grayscale, out applied));
-                        var label = manager.GetLabel(attentionHandler.Filename);
-
+                        var label = manager.GetLabel(_name_);
                      
 
                         PresentResult pr = new PresentResult();
@@ -222,7 +220,7 @@ namespace DRAL.UI
             var pos = new PointF(args.Event.X, args.Event.Y);
 
             DisplayMaskOver(new PointF(pos.X, pos.Y));//Display mask
-            if (attentionHandler.IsSet() && model.IsNotRunning)
+            if (attentionHandler.IsSet&& model.IsNotRunning)
             {
                 var scaleX = (attentionHandler.Width / pictureBox.WidthRequest);
                 var scaleY = (attentionHandler.Height / pictureBox.HeightRequest);

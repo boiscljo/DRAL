@@ -7,6 +7,7 @@ namespace AttentionAndRetag.Retag
     {
         int Length { get; }
         double this[int idx] { get;set; }
-        IEnumerable<T> Zip<T>(IVectorizable b,Func<double,double,T> func);
+        IEnumerable<T> Zip<T>(IVectorizable b,
+                              Func<double, double, T> func);
     }
 }

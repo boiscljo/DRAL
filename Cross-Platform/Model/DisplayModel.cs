@@ -18,7 +18,7 @@ namespace AttentionAndRetag.Model
         public event PropertyChangedEventHandler PropertyChanged;
         public int TrainingFileCount => new DirectoryInfo("./data/ori/labels/").EnumerateFiles().Count();
 
-        readonly RetagWindow win;
+        private readonly RetagWindow win;
         public DisplayModel(RetagWindow window)
         {
             win = window;
@@ -31,9 +31,7 @@ namespace AttentionAndRetag.Model
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
             if (name == nameof(TrainingFileCount))
-            {
                 win.Count = TrainingFileCount.ToString();
-            }
         }
 
         private void SetRunning(bool v)
@@ -59,7 +57,8 @@ namespace AttentionAndRetag.Model
             }
         }
 
-        public async void RequestImageIn<T>(FixedSizeImage img, Func<Image<T>> generator)
+        public async void RequestImageIn<T>(FixedSizeImage img,
+                                            Func<Image<T>> generator)
             where T : unmanaged
         {
             var val = semaphoreScr.WaitOne(0);
@@ -71,7 +70,8 @@ namespace AttentionAndRetag.Model
                 semaphoreScr.Release();
             }
         }
-        public async void RequestImageIn<T>(FixedSizeImage[] img, Func<Image<T>[]> generator)
+        public async void RequestImageIn<T>(FixedSizeImage[] img,
+                                            Func<Image<T>[]> generator)
             where T : unmanaged
         {
             var val = semaphoreScr.WaitOne(0);

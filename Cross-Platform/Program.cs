@@ -18,8 +18,8 @@ namespace DRAL
         internal static bool withWindow = true;
         internal static bool autoClose = false;
         internal static bool verbose = false;
-        internal static string file_in = null;
-        internal static string file_out = null;
+        internal static string? file_in = null;
+        internal static string? file_out = null;
         internal static int skip = 0;
         internal static int take = int.MaxValue;
         static void Main(string[] args)
@@ -88,7 +88,7 @@ namespace DRAL
                 take = int.Parse(args[takeIdx + 1]);
             }
 
-            DRALWindow window = null;
+            DRALWindow window = new ErrorWindow();
 
             if (args.Contains("--no-window") || args.Contains("--cli") || ((args.Contains("-s") || args.Contains("--show")) && (args.Contains("--out") || args.Contains("-o"))))
                 withWindow = false;
@@ -105,7 +105,7 @@ namespace DRAL
                (window is ShowWindow && (args.Contains("--out") || args.Contains("-o"))))
             {
                 autoClose = true;
-                Task.Run(async () =>
+                _=Task.Run(async () =>
                 {
                     await Task.Delay(500);
                     await window.Fix();
@@ -167,7 +167,7 @@ namespace DRAL
                 return new Image<T>(1, 1);
             }
         }
-        internal static void SaveFile_<T>(string _name_, Image<T> img)
+        internal static void SaveFile_<T>(string _name_, Image<T>? img)
              where T : unmanaged
         {
             try
@@ -184,7 +184,10 @@ namespace DRAL
         {
             return v.ToString(new CultureInfo("en-US"));
         }
-        internal static void SaveLabel(string v, IMAGE_LABEL_INFO label, double w, double h)
+        internal static void SaveLabel(string v,
+                                       IMAGE_LABEL_INFO label,
+                                       double w,
+                                       double h)
         {
             try
             {

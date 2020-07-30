@@ -13,13 +13,13 @@ using System.Threading.Tasks;
 
 namespace AttentionAndRetag.Model
 {
-    public class DisplayModelNew : INotifyPropertyChanged
+    public class DisplayModelTagWindow : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
         public int TrainingFileCount => new DirectoryInfo("./data/new_ori/labels/").EnumerateFiles().Count();
 
         private readonly NewTagWindow win;
-        public DisplayModelNew(NewTagWindow window)
+        public DisplayModelTagWindow(NewTagWindow window)
         {
             win = window;
             EmitChanged(nameof(TrainingFileCount));
@@ -59,7 +59,8 @@ namespace AttentionAndRetag.Model
             }
         }
 
-        public async void RequestImageIn<T>(FixedSizeImage img, Func<Image<T>> generator)
+        public async void RequestImageIn<T>(FixedSizeImage img,
+                                            Func<Image<T>> generator)
             where T : unmanaged
         {
             var val = semaphoreScr.WaitOne(0);
@@ -71,7 +72,8 @@ namespace AttentionAndRetag.Model
                 semaphoreScr.Release();
             }
         }
-        public async void RequestImageIn<T>(FixedSizeImage[] img, Func<Image<T>[]> generator)
+        public async void RequestImageIn<T>(FixedSizeImage[] img,
+                                            Func<Image<T>[]> generator)
             where T : unmanaged
         {
             var val = semaphoreScr.WaitOne(0);

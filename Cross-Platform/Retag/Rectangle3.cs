@@ -22,10 +22,21 @@ namespace AttentionAndRetag.Retag
         [FieldOffset(sizeof(double) * 5)]
         public double Depth;
 
-        public Rectangle3(Point3 location, Point3 size):this(location.X,location.Y,location.Z,size.X,size.Y,size.Z)
+        public Rectangle3(Point3 location,
+                          Point3 size) :this(location.X,
+                              location.Y,
+                              location.Z,
+                              size.X,
+                              size.Y,
+                              size.Z)
         {
         }
-        public Rectangle3(double x, double y, double z, double xs, double ys, double zs)
+        public Rectangle3(double x,
+                          double y,
+                          double z,
+                          double xs,
+                          double ys,
+                          double zs)
         {
             X = x;
             Y = y;

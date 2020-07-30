@@ -30,7 +30,7 @@ namespace DRAL.UI
         PointF clickBegin;
         readonly Dictionary<uint, bool> buttonsPressed = new Dictionary<uint, bool>();
         readonly IMAGE_LABEL_INFO label = new IMAGE_LABEL_INFO();
-        LABEL current, last;
+        LABEL? current, last;
         readonly Image<Pixel> img;
         readonly Image<BGRA> img_bgra;
         private readonly ImageSurface ims;
@@ -190,7 +190,7 @@ namespace DRAL.UI
             buttonsPressed[args.Event.Button] = false;
             if (args.Event.Button == 1)
             {
-                current.box2d.Fix(imgBox.WidthRequest,imgBox.HeightRequest);
+                current?.box2d.Fix(imgBox.WidthRequest,imgBox.HeightRequest);
                 label.labels.Add(current);
                 last = current;
                 current = null;
