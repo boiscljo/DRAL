@@ -40,7 +40,7 @@ namespace DRAL.Tag
             //Foreach config, keep proposed boxes
             foreach (var (p, wz) in StandardFunctions.ListXMeansModes(img))
             {
-                proposedBoxes.AddRange(await c.Cluster(gray.ConvertTo<Pixel>(), graphics, p, wz));
+                proposedBoxes.AddRange(await c.Cluster(gray, graphics, p, wz));
                 if (iActivated != null)
                     Application.Invoke((_, _1) =>
                     {

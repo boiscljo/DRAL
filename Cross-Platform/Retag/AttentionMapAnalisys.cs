@@ -8,19 +8,31 @@ using System.Threading.Tasks;
 
 namespace AttentionAndRetag.Retag
 {
+    /// <summary>
+    /// Analyzers for the attention map
+    /// </summary>
     public class AttentionMapAnalizer
     {
-        public ConfigurationManager ConfigurationManager { get; set; }
+        private const int MIN_ATTENTION_PERBYTE = 25;
 
-        public List<Cluster<Point3>> SeparateImage(Image<Pixel> image)
+        /// <summary>
+        /// Hold the app configuration 
+        /// </summary>
+        public ConfigurationManager ConfigurationManager { get; set; }
+        /// <summary>
+        /// Separate the current grayscale attention map into clusters
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        public List<Cluster<Point3>> SeparateImage(Image<byte> image)
         {
-            Image<double> img = image.ConvertUsing<double>((px) => px.R);
+            Image<double> img = image.ConvertUsing<double>((px) => px);
 
             var lst = new List<List<Point3>>();
-
+            //Converts to 3D points
             var pts = (from x in Enumerable.Range(0, image.Width)
                        from y in Enumerable.Range(0, image.Height)
-                       where img[x, y] > 25
+                       where img[x, y] > MIN_ATTENTION_PERBYTE
                        select new Point3(x, y, img[x, y])).ToList();
 
             Kmeans<Point3>.GetInitialMeans = StandardFunctions.GetRandomMeansFunction(img);
@@ -28,8 +40,14 @@ namespace AttentionAndRetag.Retag
             Xmeans<Point3> xmeans = new Xmeans<Point3>(pts);
             var clusters = xmeans.Calculation();
 
-            return (clusters);
+            return clusters;
         }
+        /// <summary>
+        /// Split non touching clusters
+        /// </summary>
+        /// <param name="clusters">Input list of clusters</param>
+        /// <param name="minSize">Minimum size of a cluster to be considered</param>
+        /// <returns>Output list of clusters</returns>
         public List<Cluster<Point3>> SplitNonTouching(List<Cluster<Point3>> clusters,
                                                       int minSize = 20)
         {
@@ -38,7 +56,7 @@ namespace AttentionAndRetag.Retag
             for (var i = 0; i < workingSet.Count; i++)
             {
                 //if (workingSet[i].Centroid.X == 0)
-                    //Console.WriteLine("");
+                //Console.WriteLine("");
 
                 var box = ToBox(workingSet[i].Data);
                 var tmp = Image<bool>.Create((int)rectangles[i].Size.X, (int)rectangles[i].Size.Y);
@@ -67,6 +85,9 @@ namespace AttentionAndRetag.Retag
             }
             return workingSet;
         }
+        /// <summary>
+        /// Initialize the analyzer
+        /// </summary>
         public void Init()
         {
             Kmeans<Point3>.GetWitnesses = (cPoints) =>
@@ -89,18 +110,31 @@ namespace AttentionAndRetag.Retag
                 StandardFunctions.MinkowskiDistance(3, new double[] { 1, 1, 1 }));
             Kmeans<Point3>.GetMean = StandardFunctions.GetMeanPt3;
         }
+        /// <summary>
+        /// Convert RectangleF to cls
+        /// </summary>
+        /// <param name="cls">Output</param>
+        /// <param name="matchedBox">Input</param>
         private void SetBox(BOX2D cls,
-                            RectangleF matchedBox)
+                            in RectangleF matchedBox)
         {
             cls.x1 = matchedBox.X;
             cls.y1 = matchedBox.Y;
             cls.x2 = matchedBox.Right;
             cls.y2 = matchedBox.Bottom;
         }
+        /// <summary>
+        /// Improves the labels
+        /// </summary>
+        /// <param name="proposedBoxes">Cluster list</param>
+        /// <param name="labels">Original label</param>
+        /// <param name="IOU_THRESHOLD">IOU_THRESHOLD</param>
+        /// <param name="IOS_THRESHOLD">IOS_THRESHOLD</param>
+        /// <param name="maxShrink">maxShrink</param>
         public void AdaptLabel(List<RectangleF> proposedBoxes,
                                IMAGE_LABEL_INFO labels,
-                               double T1 = 0.9,
-                               double T2 = 0.9,
+                               double IOU_THRESHOLD = 0.9,
+                               double IOS_THRESHOLD = 0.9,
                                double maxShrink = 0.25)
         {
             foreach (var cls in labels.labels)//foreach label
@@ -116,7 +150,7 @@ namespace AttentionAndRetag.Retag
 
                     var matchedBox = proposedBoxes
                         .Select((x) => new { box = x, iou = StandardFunctions.IOU(x, rct) })
-                        .Where((x) => x.iou > T1)
+                        .Where((x) => x.iou > IOU_THRESHOLD)
                         .OrderBy((x) => x.iou)
                         .FirstOrDefault()?.box;
 
@@ -129,7 +163,7 @@ namespace AttentionAndRetag.Retag
                     var matchedBoxesIOS = proposedBoxes
                         .Select((x) => new { box = x, ios = StandardFunctions.IOS(x, rct) })
                         .Where((x) => x.box.Width * x.box.Height < rct.Width * rct.Height)//matched must be smaller
-                        .Where((x) => x.ios > T2)
+                        .Where((x) => x.ios > IOS_THRESHOLD)
                         .OrderBy((x) => x.ios).ToArray();
                     if (matchedBoxesIOS.Length > 0)
                     {
@@ -171,7 +205,15 @@ namespace AttentionAndRetag.Retag
                 }
             }
         }
-        public async Task<IEnumerable<RectangleF>> Cluster(Image<Pixel> image,
+        /// <summary>
+        /// Cluster the image
+        /// </summary>
+        /// <param name="image">Input attention map</param>
+        /// <param name="graphics">Graphics to display while processing, can be null to disable</param>
+        /// <param name="p">P parameter for minkowski</param>
+        /// <param name="wz">Weight for the Z parameter</param>
+        /// <returns></returns>
+        public async Task<IEnumerable<RectangleF>> Cluster(Image<byte> image,
                                                            Graphics<Pixel>? graphics,
                                                            int p,
                                                            double wz)
@@ -184,33 +226,49 @@ namespace AttentionAndRetag.Retag
 
             var colors = (from x in clusters select StandardFunctions.RandomColor).ToList();
             var clustersWithColor = clusters.Zip(colors);
-            foreach (var (First, Second) in clustersWithColor)
+            if (graphics != null)
             {
-                var cluster = First;
-                var color = Second;
-
-                foreach (var pixel in cluster.Data)
+                Image<Pixel> working = image.ConvertTo<Pixel>();
+                //Each pixel
+                foreach (var (First, Second) in clustersWithColor)
                 {
-                    if(graphics!=null)
-                        image[(int)pixel.X, (int)pixel.Y] = color;
+                    var cluster = First;
+                    var color = Second;
+
+                    foreach (var pixel in cluster.Data)
+                    {
+                        if (graphics != null)
+                            working[(int)pixel.X, (int)pixel.Y] = color;
+                    }
                 }
-            }
-            graphics?.DrawImage(image, 0, 0);
-            foreach (var (cluster, color) in clustersWithColor)
-            {
-                var box = ToBox(cluster.Data);
-                if (box.IsValid)
-                    graphics?.DrawRectangle(color, box.Location.X, box.Location.Y, box.Size.X, box.Size.Y, 5);
+                graphics.DrawImage(working, 0, 0);
+                //Boxes
+                foreach (var (cluster, color) in clustersWithColor)
+                {
+                    var box = ToBox(cluster.Data);
+                    if (box.IsValid)
+                        graphics.DrawRectangle(color, box.Location.X, box.Location.Y, box.Size.X, box.Size.Y, 5);
+                }
             }
             graphics?.DrawString("p=" + p + ",wz=" + wz, Pixels.DeepPink, 0, 0, BaseFonts.Premia, 3);
             var boxes = ToBox(clusters);
             return To2D(boxes);
         }
+        /// <summary>
+        /// Convert 3D box to 2D box
+        /// </summary>
+        /// <param name="boxes">Input 3d Rectangle</param>
+        /// <returns>2d rectangle</returns>
         public IEnumerable<RectangleF> To2D(List<Rectangle3> boxes)
         {
             return from bx in boxes
                    select new RectangleF(bx.Location.X, bx.Location.Y, bx.Size.X, bx.Size.Y);
         }
+        /// <summary>
+        /// Convert Clusters into Rectangle3D
+        /// </summary>
+        /// <param name="clusters">Input clusters</param>
+        /// <returns>3d rectangle</returns>
         public List<Rectangle3> ToBox(IEnumerable<Cluster<Point3>> clusters)
         {
             List<Rectangle3> lst = new List<Rectangle3>();
@@ -225,6 +283,11 @@ namespace AttentionAndRetag.Retag
             }
             return lst;
         }
+        /// <summary>
+        /// Calculate bounds of a blob
+        /// </summary>
+        /// <param name="cluster">List of all pixels</param>
+        /// <returns>Bounding box</returns>
         public static Rectangle3 ToBox(IEnumerable<Point3> cluster)
         {
             var stat = MoyskleyTech.Mathematics.Statistics.DescriptiveStatistics.From2D(
@@ -238,6 +301,11 @@ namespace AttentionAndRetag.Retag
                 );
             return rct;
         }
+        /// <summary>
+        /// Merge box step
+        /// </summary>
+        /// <param name="clusters">Input clusters</param>
+        /// <returns>Output clusters</returns>
         public List<Cluster<Point3>> MergeBox(List<Cluster<Point3>> clusters)
         {
             var rectangles = (from x in clusters select ToBox(x.Data)).ToList();
@@ -265,6 +333,13 @@ namespace AttentionAndRetag.Retag
 
             return workingSet;
         }
+        /// <summary>
+        /// Detection if clusters are touching
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="b1"></param>
+        /// <returns></returns>
         public static bool AreClusterTouching(Cluster<Point3> a,
                                               Cluster<Point3> b,
                                               Rectangle3 b1)//b is larger

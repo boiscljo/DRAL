@@ -4,6 +4,10 @@ using System.Text;
 
 namespace AttentionAndRetag.Retag
 {
+	/// <summary>
+	/// Generic definition of a ClusterPoint int KMeans, Point + Cluster Index
+	/// </summary>
+	/// <typeparam name="Point3">Type of point</typeparam>
 	public class ClusteringPoint<Point3>: IVectorizable
 		where Point3 : IVectorizable,IClonable<Point3>
 	{

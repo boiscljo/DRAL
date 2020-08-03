@@ -176,10 +176,8 @@ namespace DRAL.UI
                     if (attentionHandler.IsSet)
                     {
                         DateTime beginPopup = DateTime.Now;
-                        Image<byte>? grayscale = null;
-                        Image<Pixel>? applied = null;
                         var _name_ = attentionHandler.Filename;
-                        await Task.Run(() => attentionHandler.GenerateGrayscaleAndApplied(out grayscale, out applied));
+                        (Image<byte> grayscale, Image<Pixel> applied) = await Task.Run(() => attentionHandler.GenerateGrayscaleAndApplied());
                         var label = manager.GetLabel(_name_);
                      
 

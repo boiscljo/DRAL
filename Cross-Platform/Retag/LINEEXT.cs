@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace AttentionAndRetag.Retag
 {
+    /// <summary>
+    /// Utility class for BDD label
+    /// </summary>
     public static class LINEEXT
     {
         public static double WeightedAverage<Y>(this IEnumerable<Y> y, Func<Y, double> val, Func<Y, double> weight)

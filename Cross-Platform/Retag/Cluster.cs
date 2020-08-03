@@ -5,6 +5,10 @@ using System.Text;
 
 namespace AttentionAndRetag.Retag
 {
+	/// <summary>
+	/// Generic definition of a cluster for KMeans
+	/// </summary>
+	/// <typeparam name="PointType"></typeparam>
     public class Cluster<PointType> where PointType : IClonable<PointType>
 	{
 		public PointType Centroid { get; private set; }

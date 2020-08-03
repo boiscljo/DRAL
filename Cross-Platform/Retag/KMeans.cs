@@ -6,6 +6,10 @@ using System.Text;
 namespace AttentionAndRetag.Retag
 {
 
+	/// <summary>
+	/// Utility class to apply kmeans
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
 	public class Kmeans<T>
 		where T:IClonable<T>, IVectorizable
 	{

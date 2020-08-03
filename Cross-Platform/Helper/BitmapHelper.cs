@@ -1,19 +1,10 @@
-﻿using DRAL.UI;
-using Gdk;
-using Gtk;
-using ImageProcessing.JPEGCodec;
-using MoyskleyTech.ImageProcessing;
-using MoyskleyTech.ImageProcessing.Image;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Runtime.CompilerServices;
-using System.Text;
-
-namespace DRAL
+﻿namespace DRAL
 {
+    /// <summary>
+    /// Contains all extensions method on the Bitmap Class
+    /// </summary>
     public static class BitmapHelper
     {
-     
+
     }
 }

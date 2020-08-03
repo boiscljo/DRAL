@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace AttentionAndRetag.Retag
 {
+    /// <summary>
+    /// Utility interface to .ZIP some points
+    /// </summary>
     public interface IVectorizable
     {
         int Length { get; }

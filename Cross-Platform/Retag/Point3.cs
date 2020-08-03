@@ -5,7 +5,10 @@ using System.Runtime.InteropServices;
 
 namespace AttentionAndRetag.Retag
 {
-    [StructLayout(LayoutKind.Explicit, Size = sizeof(double) * 6)]
+    /// <summary>
+    /// Represent a 3D point
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = sizeof(double) * 3)]
     public struct Point3 : IClonable<Point3>, IVectorizable
     {
         [FieldOffset(0)]

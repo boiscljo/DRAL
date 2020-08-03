@@ -4,6 +4,9 @@ using System.Linq;
 using static Newtonsoft.Json.JsonConvert;
 namespace AttentionAndRetag.Retag
 {
+    /// <summary>
+    /// Utility class for BDD label
+    /// </summary>
     public class IMAGE_LABEL_INFO : IClonable<IMAGE_LABEL_INFO>
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Cannot change JSON files")]

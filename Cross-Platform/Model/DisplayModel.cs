@@ -1,24 +1,33 @@
 ﻿using DRAL;
 using DRAL.UI;
-using MoyskleyTech.ImageProcessing;
 using MoyskleyTech.ImageProcessing.Image;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace AttentionAndRetag.Model
 {
+    /// <summary>
+    /// Display model for RETAG mode
+    /// </summary>
     public class DisplayModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+        /// <summary>
+        /// State variable for number of File in training
+        /// </summary>
         public int TrainingFileCount => new DirectoryInfo("./data/ori/labels/").EnumerateFiles().Count();
-
+        /// <summary>
+        /// The window reference
+        /// </summary>
         private readonly RetagWindow win;
+        /// <summary>
+        /// Contructor that emit the event
+        /// </summary>
+        /// <param name="window"></param>
         public DisplayModel(RetagWindow window)
         {
             win = window;
@@ -27,13 +36,21 @@ namespace AttentionAndRetag.Model
 
         private readonly Semaphore semaphore = new Semaphore(1, 1);
         private readonly Semaphore semaphoreScr = new Semaphore(1, 1);
+        /// <summary>
+        /// On a platform that accept databinding this event refresh, otherwise it manually edit
+        /// SHOULD CHANGE SO THAT THE WINDOW SUBSCRIBE TO THE EVENT
+        /// </summary>
+        /// <param name="name"></param>
         public void EmitChanged(string name)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
             if (name == nameof(TrainingFileCount))
                 win.Count = TrainingFileCount.ToString();
         }
-
+        /// <summary>
+        /// Current state for the window
+        /// </summary>
+        /// <param name="v"></param>
         private void SetRunning(bool v)
         {
             IsRunning = v;
