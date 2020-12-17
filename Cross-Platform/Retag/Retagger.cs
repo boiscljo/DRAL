@@ -24,7 +24,7 @@ namespace AttentionAndRetag.Retag
         {
             var ctx = img.Clone();
 
-            MoyskleyTech.ImageProcessing.Image.Graphics<Pixel>? graphics=null;
+            Graphics<Pixel>? graphics=null;
             if (iActivated != null)
             {
                 graphics = MoyskleyTech.ImageProcessing.Image.Graphics.FromImage(ctx);

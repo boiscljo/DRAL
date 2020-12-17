@@ -7,13 +7,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
+using static DRAL.Constants;
 namespace AttentionAndRetag.Model
 {
     public class DisplayModelTagWindow : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        public int TrainingFileCount => new DirectoryInfo("./data/new_ori/labels/").EnumerateFiles().Count();
+        public int TrainingFileCount => new DirectoryInfo("./data/"+UQTRR+"/labels/").EnumerateFiles().Count();
 
         private readonly NewTagWindow win;
         public DisplayModelTagWindow(NewTagWindow window)

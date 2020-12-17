@@ -20,7 +20,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Rectangle = MoyskleyTech.ImageProcessing.Image.Rectangle;
-
+using static DRAL.Constants;
 namespace DRAL.UI
 {
     public partial class NewTagWindow : DRALWindow
@@ -165,10 +165,10 @@ namespace DRAL.UI
                             /*if (chkGenNow.Active)
                             {
                                 var newLabel = await tagger.ImproveLabel(iActivated, attentionHandler.Image, grayscale, label);
-                                SaveLabel("./data/imp/labels/" + _name_ + ".txt", newLabel, attentionHandler.Image.Width, attentionHandler.Image.Height);
+                                SaveLabel("./data/"+BDDP+"/labels/" + _name_ + ".txt", newLabel, attentionHandler.Image.Width, attentionHandler.Image.Height);
                             }*/
-                            Program.SaveFile_("./step1/img/ori/" + _name_ + ".jpg", attentionHandler.Image);
-                            Program.SaveFile_("./step1/img/imp/" + _name_ + ".jpg", applied);
+                            Program.SaveFile_("./step1/img/"+BDDR+"/" + _name_ + ".jpg", attentionHandler.Image);
+                            Program.SaveFile_("./step1/img/"+BDDP+"/" + _name_ + ".jpg", applied);
                             Program.SaveFile_("./step1/map/" + _name_ + ".jpg", grayscale.ConvertTo<Pixel>());
 
                             if (chkGenNow.Active)
@@ -200,7 +200,7 @@ namespace DRAL.UI
 
         private async Task GenBox(string _name_)
         {
-            var source = Program.LoadFile_<Pixel>("./step1/img/ori/" + _name_ + ".jpg");
+            var source = Program.LoadFile_<Pixel>("./step1/img/"+BDDR+"/" + _name_ + ".jpg");
             var grayscale = Program.LoadFile_<byte>("./step1/map/" + _name_ + ".jpg");
 
             if (Program.verbose)
@@ -215,8 +215,8 @@ namespace DRAL.UI
         {
             if (Program.verbose)
                 Console.WriteLine("Moving {0} fom step1 to step2",_name_);
-            System.IO.File.Move("./step1/img/ori/" + _name_ + ".jpg", "./step2/img/ori/" + _name_ + ".jpg",true);
-            System.IO.File.Move("./step1/img/imp/" + _name_ + ".jpg", "./step2/img/imp/" + _name_ + ".jpg", true);
+            System.IO.File.Move("./step1/img/"+BDDR+"/" + _name_ + ".jpg", "./step2/img/"+BDDR+"/" + _name_ + ".jpg",true);
+            System.IO.File.Move("./step1/img/"+BDDP+"/" + _name_ + ".jpg", "./step2/img/"+BDDP+"/" + _name_ + ".jpg", true);
             System.IO.File.Move("./step1/map/" + _name_ + ".jpg", "./step2/map/" + _name_ + ".jpg", true);
         }
 
@@ -264,10 +264,10 @@ namespace DRAL.UI
             if (v)
             {
                 var _name_ = attentionHandler.Filename;
-                DeleteIfExists("./data/ori/images/" + _name_ + ".jpg");
-                DeleteIfExists("./data/ori/labels/" + _name_ + ".txt");
-                DeleteIfExists("./data/imp/images/" + _name_ + ".jpg");
-                DeleteIfExists("./data/imp/labels/" + _name_ + ".txt");
+                DeleteIfExists("./data/"+BDDR+"/images/" + _name_ + ".jpg");
+                DeleteIfExists("./data/"+BDDR+"/labels/" + _name_ + ".txt");
+                DeleteIfExists("./data/"+BDDP+"/images/" + _name_ + ".jpg");
+                DeleteIfExists("./data/"+BDDP+"/labels/" + _name_ + ".txt");
                 DeleteIfExists("./data/map/images/" + _name_ + ".txt");
             }
         }
@@ -301,9 +301,9 @@ namespace DRAL.UI
         private bool ExistsInTraining()
         {
             var _name_ = attentionHandler.Filename;
-            var img_path = "./data/new_imp/images/" + _name_ + ".jpg";
-            var img_path2 = "./step1/img/ori/" + _name_ + ".jpg";
-            var img_path3 = "./step2/img/ori/" + _name_ + ".jpg";
+            var img_path = "./data/"+UQTRP+"/images/" + _name_ + ".jpg";
+            var img_path2 = "./step1/img/"+BDDR+"/" + _name_ + ".jpg";
+            var img_path3 = "./step2/img/"+BDDR+"/" + _name_ + ".jpg";
             return (System.IO.File.Exists(img_path))|| (System.IO.File.Exists(img_path2))|| (System.IO.File.Exists(img_path3));
         }
         private void LoadImageInformation()
@@ -315,9 +315,9 @@ namespace DRAL.UI
             pictureBox.Image = (attentionHandler.Image);
 
             var paths = new string[] {
-                 "./data/new_imp/images/" + _name_ + ".jpg",
-                 "./step1/img/imp/" + _name_ + ".jpg",
-                 "./step2/img/imp/" + _name_ + ".jpg"
+                 "./data/"+UQTRP+"/images/" + _name_ + ".jpg",
+                 "./step1/img/"+BDDP+"/" + _name_ + ".jpg",
+                 "./step2/img/"+BDDP+"/" + _name_ + ".jpg"
             };
             var existingFile = paths.FirstOrDefault((X) => System.IO.File.Exists(X));
             if (existingFile!=null)
@@ -368,7 +368,7 @@ namespace DRAL.UI
 
                 try 
                 {
-                    var step1 = System.IO.Directory.GetFiles("./step1/img/ori");
+                    var step1 = System.IO.Directory.GetFiles("./step1/img/"+BDDR);
                     async Task Dofile(string file)
                     {
                          var img = System.IO.Path.GetFileNameWithoutExtension(file);
@@ -383,7 +383,7 @@ namespace DRAL.UI
 
                     if (Program.withWindow)
                     {
-                        var step2 = System.IO.Directory.GetFiles("./step2/img/ori");
+                        var step2 = System.IO.Directory.GetFiles("./step2/img/"+BDDR);
                         foreach (var file in step2.OrderBy((x)=>x).Skip(Program.skip).Take(Program.take))
                         {
                             var img = System.IO.Path.GetFileNameWithoutExtension(file);
@@ -408,25 +408,25 @@ namespace DRAL.UI
             //Step 1, only image and map
             Directory.CreateDirectory("./step1");
             Directory.CreateDirectory("./step1/img");
-            Directory.CreateDirectory("./step1/img/ori");
-            Directory.CreateDirectory("./step1/img/imp");
+            Directory.CreateDirectory("./step1/img/"+BDDR);
+            Directory.CreateDirectory("./step1/img/"+BDDP);
             Directory.CreateDirectory("./step1/map");
             Directory.CreateDirectory("./step1/box");
 
             //Step 2, after k-means, should be moves from 1 to 2
             Directory.CreateDirectory("./step2");
             Directory.CreateDirectory("./step2/img");
-            Directory.CreateDirectory("./step2/img/ori");
-            Directory.CreateDirectory("./step2/img/imp");
+            Directory.CreateDirectory("./step2/img/"+BDDR);
+            Directory.CreateDirectory("./step2/img/"+BDDP);
             Directory.CreateDirectory("./step2/map");
             Directory.CreateDirectory("./step2/box");
 
             //final output
-            Directory.CreateDirectory("./data/new_ori/labels");
-            Directory.CreateDirectory("./data/new_ori/images");
+            Directory.CreateDirectory("./data/"+UQTRR+"/labels");
+            Directory.CreateDirectory("./data/"+UQTRR+"/images");
 
-            Directory.CreateDirectory("./data/new_imp/labels");
-            Directory.CreateDirectory("./data/new_imp/images");
+            Directory.CreateDirectory("./data/"+UQTRP+"/labels");
+            Directory.CreateDirectory("./data/"+UQTRP+"/images");
         }
 
         private void Evt_ButtonReleaseEvent(object o, ButtonReleaseEventArgs args)

@@ -20,6 +20,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Rectangle = MoyskleyTech.ImageProcessing.Image.Rectangle;
+using static DRAL.Constants;
 
 namespace DRAL.UI
 {
@@ -75,10 +76,10 @@ namespace DRAL.UI
             }
             /*else  //Resize files
             {
-                Directory.CreateDirectory("./data/new_ori/labels");
-                Directory.CreateDirectory("./data/new_imp/labels");
+                Directory.CreateDirectory("./data/"+UQTRR+"/labels");
+                Directory.CreateDirectory("./data/"+UQTRP+"/labels");
 
-                foreach (var file in Directory.GetFiles("./data/new_ori/labels").Concat(Directory.GetFiles("./data/new_imp/labels")))
+                foreach (var file in Directory.GetFiles("./data/"+UQTRR+"/labels").Concat(Directory.GetFiles("./data/"+UQTRP+"/labels")))
                 {
                     if (new string[] { 
                         "131.txt",

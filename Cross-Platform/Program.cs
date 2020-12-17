@@ -96,8 +96,11 @@ namespace DRAL
                 window = new NewTagWindow();
             if (args.Contains("--show") || args.Contains("-s"))
                 window = new ShowWindow();
+            if ( args.Contains("--convert") || args.Contains("-c") )
+                window = new ConvertWindow();
             if (args.Contains("--retag") || args.Contains("-r") || window == null)
                 window = new RetagWindow();
+            
 
             if (withWindow)
                 window.Show();
@@ -167,17 +170,19 @@ namespace DRAL
                 return new Image<T>(1, 1);
             }
         }
-        internal static void SaveFile_<T>(string _name_, Image<T>? img)
+        internal static bool SaveFile_<T>(string _name_, Image<T>? img)
              where T : unmanaged
         {
             try
             {
                 using var s = System.IO.File.Create(_name_);
                 new JPEGCodec().Save<T>(img, s);
+                return true;
             }
             catch (Exception e)
             {
                 Console.Error.WriteLine(e.Message + e.StackTrace);
+                return false;
             }
         }
         internal static string TS(double v)

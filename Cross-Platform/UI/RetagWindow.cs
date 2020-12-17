@@ -19,7 +19,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Rectangle = MoyskleyTech.ImageProcessing.Image.Rectangle;
-
+using static DRAL.Constants;
 namespace DRAL.UI
 {
     public partial class RetagWindow: DRALWindow
@@ -62,10 +62,10 @@ namespace DRAL.UI
         private static void CreateDirectories()
         {
             Directory.CreateDirectory("./data");
-            Directory.CreateDirectory("./data/ori/images");
-            Directory.CreateDirectory("./data/ori/labels");
-            Directory.CreateDirectory("./data/imp/images");
-            Directory.CreateDirectory("./data/imp/labels");
+            Directory.CreateDirectory("./data/"+BDDR+"/images");
+            Directory.CreateDirectory("./data/"+BDDR+"/labels");
+            Directory.CreateDirectory("./data/"+BDDP+"/images");
+            Directory.CreateDirectory("./data/"+BDDP+"/labels");
             Directory.CreateDirectory("./data/map/images");
         }
 
@@ -192,12 +192,12 @@ namespace DRAL.UI
                             if (chkGenNow.Active)
                             {
                                 var newLabel = await retag.ImproveLabel(iActivated, attentionHandler.Image, grayscale, label);
-                                Program.SaveLabel("./data/imp/labels/" + _name_ + ".txt", newLabel, attentionHandler.Image.Width, attentionHandler.Image.Height);
+                                Program.SaveLabel("./data/"+BDDP+"/labels/" + _name_ + ".txt", newLabel, attentionHandler.Image.Width, attentionHandler.Image.Height);
                             }
-                            Program.SaveFile_("./data/ori/images/" + _name_ + ".jpg", attentionHandler.Image);
-                            Program.SaveLabel("./data/ori/labels/" + _name_ + ".txt", label, attentionHandler.Image.Width, attentionHandler.Image.Height);
-                            Program.SaveFile_("./data/imp/images/" + _name_ + ".jpg", applied);
-                            Program.SaveFile_("./data/map/images/" + _name_ + ".jpg", grayscale.ConvertTo<Pixel>());
+                            Program.SaveFile_("./data/"+BDDR+"/images/" + _name_ + ".jpg", attentionHandler.Image);
+                            Program.SaveLabel("./data/"+BDDR+"/labels/" + _name_ + ".txt", label, attentionHandler.Image.Width, attentionHandler.Image.Height);
+                            Program.SaveFile_("./data/"+BDDP+"/images/" + _name_ + ".jpg", applied);
+                            Program.SaveFile_("./data/"+BDDP+"/images/" + _name_ + ".jpg", grayscale.ConvertTo<Pixel>());
                             model.HadChangedTraining();
                         }
                         DateTime endPopup = DateTime.Now;
@@ -252,10 +252,10 @@ namespace DRAL.UI
             if (v)
             {
                 var _name_ = attentionHandler.Filename;
-                DeleteIfExists("./data/ori/images/" + _name_ + ".jpg");
-                DeleteIfExists("./data/ori/labels/" + _name_ + ".txt");
-                DeleteIfExists("./data/imp/images/" + _name_ + ".jpg");
-                DeleteIfExists("./data/imp/labels/" + _name_ + ".txt");
+                DeleteIfExists("./data/"+BDDR+"/images/" + _name_ + ".jpg");
+                DeleteIfExists("./data/"+BDDR+"/labels/" + _name_ + ".txt");
+                DeleteIfExists("./data/"+BDDP+"/images/" + _name_ + ".jpg");
+                DeleteIfExists("./data/"+BDDP+"/labels/" + _name_ + ".txt");
                 DeleteIfExists("./data/map/images/" + _name_ + ".txt");
             }
         }
@@ -298,7 +298,7 @@ namespace DRAL.UI
         private bool ExistsInTraining()
         {
             var _name_ = attentionHandler.Filename;
-            var img_path = "./data/imp/images/" + _name_ + ".jpg";
+            var img_path = "./data/"+BDDP+"/images/" + _name_ + ".jpg";
             return (System.IO.File.Exists(img_path));
         }
         private void LoadImageInformation()
@@ -316,7 +316,7 @@ namespace DRAL.UI
                 iOri.Image = (attentionHandler.Image);
                 pictureBox.Image = (attentionHandler.Image);
             }
-            var img_path = "./data/imp/images/" + _name_ + ".jpg";
+            var img_path = "./data/"+BDDP+"/images/" + _name_ + ".jpg";
             var exists = (System.IO.File.Exists(img_path));
             if (exists)
             {
@@ -363,16 +363,16 @@ namespace DRAL.UI
             if(await model.RequestRun())
             {  
                 Directory.CreateDirectory("./data");
-                Directory.CreateDirectory("./data/ori/images");
-                Directory.CreateDirectory("./data/ori/labels");
-                Directory.CreateDirectory("./data/imp/images");
-                Directory.CreateDirectory("./data/imp/labels");
-                Directory.CreateDirectory("./data/both/images");
-                Directory.CreateDirectory("./data/both/labels");
+                Directory.CreateDirectory("./data/"+BDDR+"/images");
+                Directory.CreateDirectory("./data/"+BDDR+"/labels");
+                Directory.CreateDirectory("./data/"+BDDP+"/images");
+                Directory.CreateDirectory("./data/"+BDDP+"/labels");
+                Directory.CreateDirectory("./data/"+BDD+"/images");
+                Directory.CreateDirectory("./data/"+BDD+"/labels");
                 Directory.CreateDirectory("./data/map/images");
 
-                var originals_label = (from x in Directory.GetFiles("./data/ori/labels") select new FileInfo(x).Name).ToArray();
-                var finals_label = (from x in Directory.GetFiles("./data/imp/labels") select new FileInfo(x).Name).ToArray();
+                var originals_label = (from x in Directory.GetFiles("./data/"+BDDR+"/labels") select new FileInfo(x).Name).ToArray();
+                var finals_label = (from x in Directory.GetFiles("./data/"+BDDP+"/labels") select new FileInfo(x).Name).ToArray();
                 int missing_both=0;
                 int countFix = 0;
                 //Fix untagged finals
@@ -389,7 +389,7 @@ namespace DRAL.UI
                                 var img = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
                                 var label = manager.GetLabel(img);
 
-                                var ori_img = Program.LoadFile_<Pixel>("./data/ori/images/" + img + ".jpg");
+                                var ori_img = Program.LoadFile_<Pixel>("./data/"+BDDR+"/images/" + img + ".jpg");
                                 var grayscale = Program.LoadFile_<Pixel>("./data/map/images/" + img + ".jpg");
                                 countFix++;
                                 if (Program.verbose)
@@ -406,8 +406,8 @@ namespace DRAL.UI
                                 var task = retag.ImproveLabel(Program.withWindow ? iActivated : null, ori_img, grayscale.ConvertTo<byte>(), label);
                                 var newLabel = await task;
                                 if (Program.verbose)
-                                    Console.WriteLine("Saving labels to ./data/imp/labels/" + label_path);
-                                Program.SaveLabel("./data/imp/labels/" + label_path, newLabel, ori_img.Width, ori_img.Height);
+                                    Console.WriteLine("Saving labels to ./data/"+BDDP+"/labels/" + label_path);
+                                Program.SaveLabel("./data/"+BDDP+"/labels/" + label_path, newLabel, ori_img.Width, ori_img.Height);
                             }
                             catch (Exception er)
                             {
@@ -423,8 +423,8 @@ namespace DRAL.UI
                     }//);
                 }
 
-                var originals = (from x in Directory.GetFiles("./data/ori/images") select new FileInfo(x).Name).ToArray();
-                var finals = (from x in Directory.GetFiles("./data/imp/images") select new FileInfo(x).Name).ToArray();
+                var originals = (from x in Directory.GetFiles("./data/"+BDDR+"/images") select new FileInfo(x).Name).ToArray();
+                var finals = (from x in Directory.GetFiles("./data/"+BDDP+"/images") select new FileInfo(x).Name).ToArray();
                 var maps = (from x in Directory.GetFiles("./data/map/images") select new FileInfo(x).Name).ToArray();
 
 
@@ -434,8 +434,8 @@ namespace DRAL.UI
                     if (!maps.Contains(ori))
                     {
                         //Map is missing
-                        var ori_img = Program.LoadFile_<Pixel>("./data/ori/images/" + ori);
-                        var fin_img = Program.LoadFile_<Pixel>("./data/imp/images/" + ori);
+                        var ori_img = Program.LoadFile_<Pixel>("./data/"+BDDR+"/images/" + ori);
+                        var fin_img = Program.LoadFile_<Pixel>("./data/"+BDDP+"/images/" + ori);
                         var map = Image<byte>.Create(ori_img.Width, ori_img.Height);
                         countFix++;
 
@@ -495,10 +495,10 @@ namespace DRAL.UI
                 }
                 //orphans
                 int count_orphans = 0;
-                originals_label = (from fi in (from x in Directory.GetFiles("./data/ori/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-                finals_label = (from fi in (from x in Directory.GetFiles("./data/imp/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-                originals = (from fi in (from x in Directory.GetFiles("./data/ori/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-                finals = (from fi in (from x in Directory.GetFiles("./data/imp/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                originals_label = (from fi in (from x in Directory.GetFiles("./data/"+BDDR+"/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                finals_label = (from fi in (from x in Directory.GetFiles("./data/"+BDDP+"/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                originals = (from fi in (from x in Directory.GetFiles("./data/"+BDDR+"/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                finals = (from fi in (from x in Directory.GetFiles("./data/"+BDDP+"/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
                 maps = (from fi in (from x in Directory.GetFiles("./data/map/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
                 //orphans in original
                 if (false && originals_label.Length != originals.Length)
@@ -507,12 +507,12 @@ namespace DRAL.UI
                     foreach (var label_without_image in originals_label.Except(originals))
                     {
                         count_orphans++;
-                        DeleteIfExists("./data/ori/labels/" + label_without_image + ".txt");
+                        DeleteIfExists("./data/"+BDDR+"/labels/" + label_without_image + ".txt");
                     }
                     foreach (var image_without_label in originals.Except(originals_label))
                     {
                         count_orphans++;
-                        DeleteIfExists("./data/ori/images/" + image_without_label + ".jpg");
+                        DeleteIfExists("./data/"+BDDR+"/images/" + image_without_label + ".jpg");
                     }
                 }
                 //orphans in improved
@@ -522,12 +522,12 @@ namespace DRAL.UI
                     foreach (var label_without_image in finals_label.Except(finals))
                     {
                         count_orphans++;
-                        DeleteIfExists("./data/imp/labels/" + label_without_image + ".txt");
+                        DeleteIfExists("./data/"+BDDP+"/labels/" + label_without_image + ".txt");
                     }
                     foreach (var image_without_label in finals.Except(finals_label))
                     {
                         count_orphans++;
-                        DeleteIfExists("./data/imp/images/" + image_without_label + ".jpg");
+                        DeleteIfExists("./data/"+BDDP+"/images/" + image_without_label + ".jpg");
                     }
                 }
                 //originals do not have the same length as improved
@@ -536,14 +536,14 @@ namespace DRAL.UI
                     foreach (var original_without_final in originals.Except(finals))
                     {
                         count_orphans++;
-                        DeleteIfExists("./data/ori/labels/" + original_without_final + ".txt");
-                        DeleteIfExists("./data/ori/images/" + original_without_final + ".jpg");
+                        DeleteIfExists("./data/"+BDDR+"/labels/" + original_without_final + ".txt");
+                        DeleteIfExists("./data/"+BDDR+"/images/" + original_without_final + ".jpg");
                     }
                     foreach (var final_without_original in finals.Except(originals))
                     {
                         count_orphans++;
-                        DeleteIfExists("./data/ori/labels/" + final_without_original + ".txt");
-                        DeleteIfExists("./data/ori/images/" + final_without_original + ".jpg");
+                        DeleteIfExists("./data/"+BDDR+"/labels/" + final_without_original + ".txt");
+                        DeleteIfExists("./data/"+BDDR+"/images/" + final_without_original + ".jpg");
                     }
                 }
                 if (false && maps.Length != originals.Length)
@@ -555,15 +555,15 @@ namespace DRAL.UI
                     }
                 }
 
-                originals_label = (from fi in (from x in Directory.GetFiles("./data/ori/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-                finals_label = (from fi in (from x in Directory.GetFiles("./data/imp/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-                originals = (from fi in (from x in Directory.GetFiles("./data/ori/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
-                finals = (from fi in (from x in Directory.GetFiles("./data/imp/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                originals_label = (from fi in (from x in Directory.GetFiles("./data/"+BDDR+"/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                finals_label = (from fi in (from x in Directory.GetFiles("./data/"+BDDP+"/labels") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                originals = (from fi in (from x in Directory.GetFiles("./data/"+BDDR+"/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
+                finals = (from fi in (from x in Directory.GetFiles("./data/"+BDDP+"/images") select new FileInfo(x)) select fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length)).ToArray();
 
-                foreach (var label in originals_label) CopyIfNot("./data/ori/labels/" + label + ".txt", "./data/both/labels/" + label + "_o.txt");
-                foreach (var label in finals_label) CopyIfNot("./data/imp/labels/" + label + ".txt", "./data/both/labels/" + label + "_i.txt");
-                foreach (var label in originals) CopyIfNot("./data/ori/images/" + label + ".jpg", "./data/both/images/" + label + "_o.jpg");
-                foreach (var label in finals) CopyIfNot("./data/imp/images/" + label + ".jpg", "./data/both/images/" + label + "_i.jpg");
+                foreach (var label in originals_label) CopyIfNot("./data/"+BDDR+"/labels/" + label + ".txt", "./data/"+BDD+"/labels/" + label + "_o.txt");
+                foreach (var label in finals_label) CopyIfNot("./data/"+BDDP+"/labels/" + label + ".txt", "./data/"+BDD+"/labels/" + label + "_i.txt");
+                foreach (var label in originals) CopyIfNot("./data/"+BDDR+"/images/" + label + ".jpg", "./data/"+BDD+"/images/" + label + "_o.jpg");
+                foreach (var label in finals) CopyIfNot("./data/"+BDDP+"/images/" + label + ".jpg", "./data/"+BDD+"/images/" + label + "_i.jpg");
 
                 Application.Invoke((_, _1) =>
                 {

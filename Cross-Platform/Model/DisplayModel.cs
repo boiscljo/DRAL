@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
+using static DRAL.Constants;
 namespace AttentionAndRetag.Model
 {
     /// <summary>
@@ -19,7 +19,7 @@ namespace AttentionAndRetag.Model
         /// <summary>
         /// State variable for number of File in training
         /// </summary>
-        public int TrainingFileCount => new DirectoryInfo("./data/ori/labels/").EnumerateFiles().Count();
+        public int TrainingFileCount => new DirectoryInfo("./data/"+BDDR+"/labels/").EnumerateFiles().Count();
         /// <summary>
         /// The window reference
         /// </summary>

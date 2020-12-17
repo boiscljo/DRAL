@@ -22,7 +22,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Rectangle = MoyskleyTech.ImageProcessing.Image.Rectangle;
-
+using static DRAL.Constants;
 namespace DRAL.UI
 {
     public partial class TagWindow : DRALWindow
@@ -45,7 +45,7 @@ namespace DRAL.UI
             label.name = image;
             label.labels = new List<LABEL>();
 
-            img = Program.LoadFile_<Pixel>("./step2/img/imp/" + image + ".jpg");
+            img = Program.LoadFile_<Pixel>("./step2/img/"+BDDP+"/" + image + ".jpg");
             img = img.Resize(imgBox.WidthRequest, imgBox.HeightRequest, ScalingMode.AverageInterpolate);
             img_bgra = img.ConvertBufferTo<BGRA>();
             ims = new ImageSurface(img_bgra.DataPointer, Format.Argb32, img.Width, img.Height, img.Width * 4);
@@ -127,15 +127,15 @@ namespace DRAL.UI
 
         private void MoveDataset()
         {
-            System.IO.File.Move("./step2/img/ori/" + image + ".jpg", "./data/new_ori/images/" + image + ".jpg",true);
-            System.IO.File.Move("./step2/img/imp/" + image + ".jpg", "./data/new_imp/images/" + image + ".jpg", true);
+            System.IO.File.Move("./step2/img/"+BDDR+"/" + image + ".jpg", "./data/"+UQTRR+"/images/" + image + ".jpg",true);
+            System.IO.File.Move("./step2/img/"+BDDP+"/" + image + ".jpg", "./data/"+UQTRP+"/images/" + image + ".jpg", true);
             System.IO.File.Move("./step2/map/" + image + ".jpg", "./data/map/images/" + image + ".jpg", true);
             AttentionMapAnalizer c = new AttentionMapAnalizer();
             label.Resize(img.Width, img.Height,imgBox.WidthRequest,imgBox.HeightRequest);
             c.AdaptLabel(boxes, label);
 
-            SaveLabel("./data/new_ori/labels/" + image + ".txt");
-            SaveLabel("./data/new_imp/labels/" + image + ".txt");
+            SaveLabel("./data/"+UQTRR+"/labels/" + image + ".txt");
+            SaveLabel("./data/"+UQTRP+"/labels/" + image + ".txt");
         }
 
         private void ImgBox_MotionNotifyEvent(object o, MotionNotifyEventArgs args)
@@ -165,24 +165,24 @@ namespace DRAL.UI
             //Step 1, only image and map
             Directory.CreateDirectory("./step1");
             Directory.CreateDirectory("./step1/img");
-            Directory.CreateDirectory("./step1/img/ori");
-            Directory.CreateDirectory("./step1/img/imp");
+            Directory.CreateDirectory("./step1/img/"+BDDR);
+            Directory.CreateDirectory("./step1/img/"+BDDP);
             Directory.CreateDirectory("./step1/map");
 
             //Step 2, after k-means, should be moves from 1 to 2
             Directory.CreateDirectory("./step2");
             Directory.CreateDirectory("./step2/img");
-            Directory.CreateDirectory("./step2/img/ori");
-            Directory.CreateDirectory("./step2/img/imp");
+            Directory.CreateDirectory("./step2/img/" + BDDR);
+            Directory.CreateDirectory("./step2/img/" + BDDP);
             Directory.CreateDirectory("./step2/map");
             Directory.CreateDirectory("./step2/box");
 
             //final output
-            Directory.CreateDirectory("./data/new_ori/labels");
-            Directory.CreateDirectory("./data/new_ori/images");
+            Directory.CreateDirectory("./data/"+UQTRR+"/labels");
+            Directory.CreateDirectory("./data/"+UQTRR+"/images");
 
-            Directory.CreateDirectory("./data/new_imp/labels");
-            Directory.CreateDirectory("./data/new_imp/images");
+            Directory.CreateDirectory("./data/"+UQTRP+"/labels");
+            Directory.CreateDirectory("./data/"+UQTRP+"/images");
         }
 
         private void Evt_ButtonReleaseEvent(object o, ButtonReleaseEventArgs args)
