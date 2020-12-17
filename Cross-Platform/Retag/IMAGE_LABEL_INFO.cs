@@ -59,20 +59,23 @@ namespace AttentionAndRetag.Retag
             var possibleBox = this.labels.Where((x) => x.box2d != null).ToList();
             var possibleLines = possibleBox.SelectMany((x) =>
             {
-                var id = x.category switch
-                {
-                    "traffic sign"=>0,
-                    "traffic light"=>0,
-                    "car"=>1,
-                    "rider"=>  2,
-                    "motor"=>  1,
-                    "person"=>  3,
-                    "bus"=>  1,
-                    "truck"=>  1,
-                    "bike"=>  2,
-                    "train"=>  1,
-                    _=>-1
-                };
+                int id;
+                if ( !int.TryParse(x.category , out id) )
+                    id = x.category switch
+                    {
+                        "traffic sign"=>0,
+                        "traffic light"=>0,
+                        "car"=>1,
+                        "rider"=>  2,
+                        "motor"=>  1,
+                        "person"=>  3,
+                        "bus"=>  1,
+                        "truck"=>  1,
+                        "bike"=>  2,
+                        "train"=>  1,
+                        _=>-1
+                    };
+
                 if(id>=0)
                     return new string[1]{ id + " " + Program.TS(x.box2d.x1 / w) + " " + Program.TS(x.box2d.y1 / h) + " " + Program.TS((x.box2d.x2 - x.box2d.x1) / w) + " " + Program.TS((x.box2d.y2 - x.box2d.y1) / h)};
                 else
@@ -80,7 +83,7 @@ namespace AttentionAndRetag.Retag
             });
             return string.Join("\r\n" , possibleLines);
 
-           
+
         }
     }
 }
