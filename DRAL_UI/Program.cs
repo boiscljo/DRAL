@@ -100,7 +100,11 @@ namespace DRAL
                 window = new ConvertWindow();
             if (args.Contains("--retag") || args.Contains("-r") || window == null)
                 window = new RetagWindow();
-            
+            if(withWindow && window is ErrorWindow)
+            {
+                Console.Error.WriteLine("missing action argument");
+                return;
+            }
 
             if (withWindow)
                 window.Show();
