@@ -9,7 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cross-Platform", "Cross-Platform\Cross-Platform.csproj", "{D88652F3-5E17-4CA1-80D7-50B5FEC3F34E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DRAL_", "DRAL_\DRAL_GTK.csproj", "{D88652F3-5E17-4CA1-80D7-50B5FEC3F34E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

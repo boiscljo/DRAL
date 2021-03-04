@@ -2,7 +2,7 @@
   "profiles": {
     "Cross-Platform": {
       "commandName": "Project",
-      "commandLineArgs": "-v -c -f -i C:\\UQTR\\val"
+      "commandLineArgs": "-v -n"
     }
   }
 }

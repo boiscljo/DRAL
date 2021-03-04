@@ -133,6 +133,7 @@ namespace DRAL
                 foreach (var line in lines)
                 {
                     var spl = line.Split(" ");
+                    Console.WriteLine(line);
                     LABEL lbl = new LABEL
                     {
                         category = spl[0],

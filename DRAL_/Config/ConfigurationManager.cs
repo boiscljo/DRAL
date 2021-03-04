@@ -80,7 +80,7 @@ namespace AttentionAndRetag.Config
         /// </summary>
         /// <param name="filename">image name</param>
         /// <returns>Label for that image</returns>
-        public IMAGE_LABEL_INFO GetLabel(string filename) => labels.FirstOrDefault((x) => x.name == filename + ".jpg");
+        public IMAGE_LABEL_INFO GetLabel(string filename) => labels?.FirstOrDefault((x) => x.name == filename + ".jpg");
         /// <summary>
         /// Load the current configuration from file, INI style
         /// </summary>
