@@ -215,6 +215,9 @@ namespace DRAL.UI
         {
             if (Program.verbose)
                 Console.WriteLine("Moving {0} fom step1 to step2",_name_);
+            System.IO.Directory.CreateDirectory("./step2/img/" + BDDR);
+            System.IO.Directory.CreateDirectory("./step2/img/" + BDDP);
+            System.IO.Directory.CreateDirectory("./step2/map");
             System.IO.File.Move("./step1/img/"+BDDR+"/" + _name_ + ".jpg", "./step2/img/"+BDDR+"/" + _name_ + ".jpg",true);
             System.IO.File.Move("./step1/img/"+BDDP+"/" + _name_ + ".jpg", "./step2/img/"+BDDP+"/" + _name_ + ".jpg", true);
             System.IO.File.Move("./step1/map/" + _name_ + ".jpg", "./step2/map/" + _name_ + ".jpg", true);
@@ -427,6 +430,8 @@ namespace DRAL.UI
 
             Directory.CreateDirectory("./data/"+UQTRP+"/labels");
             Directory.CreateDirectory("./data/"+UQTRP+"/images");
+
+            Directory.CreateDirectory("./data/map/images");
         }
 
         private void Evt_ButtonReleaseEvent(object o, ButtonReleaseEventArgs args)
