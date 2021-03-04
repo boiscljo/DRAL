@@ -70,5 +70,6 @@ When started, this labeller uses the following shortcuts:
 | -------- | ------------------- | ------------------ |
 | CTRL-S   | Save and go to next | Ctrl-B             |
 | CTRL-X   | Cancel              |                    |
+| NUMPAD + | Begin label identification|              |
 
-## WIP
+
