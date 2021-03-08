@@ -258,11 +258,11 @@ namespace DRAL.UI
         private void Previous(bool v)
         {
             attentionHandler.Previous();
-            var lbl = manager.GetLabel(attentionHandler.Filename);
+            /*var lbl = manager.GetLabel(attentionHandler.Filename);
             while (lbl == null)
             {
                 attentionHandler.Previous();
-            }
+            }*/
             LoadImageInformation();
             if (v)
             {

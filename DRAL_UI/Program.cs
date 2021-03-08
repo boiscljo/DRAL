@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -55,7 +56,20 @@ namespace DRAL
             }
             if (args.Contains("-v") || args.Contains("--verbose"))
                 verbose = true;
-            Gtk.Application.Init();
+            try
+            {
+                Gtk.Application.Init();
+            }
+            catch 
+            {
+                Console.WriteLine("Installing Gtk libraries for current user");
+                WebClient wc = new WebClient();
+                wc.DownloadFile("https://zergling.moyskleytech.com/dataset/DRAL/Gtk.zip" , "Gtk.zip");
+                ZipFile.ExtractToDirectory("Gtk.zip" , Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+                System.IO.File.Delete("Gtk.zip");
+                Console.WriteLine("Please run DRAL again.");
+                return;
+            }
 
             if (args.Contains("--out"))
             {
@@ -105,6 +119,7 @@ namespace DRAL
                 Console.Error.WriteLine("missing action argument");
                 return;
             }
+
 
             if (withWindow)
                 window.Show();

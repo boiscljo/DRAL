@@ -7,9 +7,11 @@
     <AssemblyName>DRAL</AssemblyName>
     <RepositoryUrl>https://github.com/boiscljo/DRAL</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.0.3.0</AssemblyVersion>
-    <FileVersion>1.0.3.0</FileVersion>
+    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <FileVersion>1.0.4.0</FileVersion>
     <Nullable>annotations</Nullable>
+    <PackageProjectUrl>https://github.com/boiscljo/DRAL</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
