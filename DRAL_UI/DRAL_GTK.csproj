@@ -28,7 +28,7 @@
     <PackageReference Include="MoyskleyTech.ImageProcessing.PNGCodec" Version="1.0.1" />
     <PackageReference Include="MoyskleyTech.ImageProcessing.Recognition" Version="1.0.1" />
     <PackageReference Include="MoyskleyTech.Mathematics" Version="1.0.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
 </Project>
